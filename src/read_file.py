@@ -38,7 +38,6 @@ def get_operations(path: str) -> list[list[Operation]]:
                 op = Operation()
                 key = "start_ub"
                 if key in operation:
-                    print("start")
                     op.lower_bound = operation[key]
                 key = "min_duration"
                 if key in operation:
@@ -49,7 +48,6 @@ def get_operations(path: str) -> list[list[Operation]]:
                 op.resources = []
                 key = "resources"
                 if key in operation:
-                    print(operation[key])
                     for res in operation[key]:
                         resurce = Resource(res["resource"])
                         key = "release_time"
