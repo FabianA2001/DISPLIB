@@ -8,6 +8,7 @@ class Resource:
         self.release__time: int = release_time
 
     def __repr__(self) -> str:
+        # return self.name + str(self.release__time)
         return self.name
 
 
@@ -21,36 +22,40 @@ class Operation:
         self.succesors: list[int] = successors
 
     def __repr__(self) -> str:
-        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}\""
+        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound}\""
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
 
-def get_operations(path: str) -> Dict[tuple[int, int], Operation]:
-    result: Dict[tuple[int, int], Operation] = {}
+def get_operations(path: str) -> list[list[Operation]]:
+    result: list[list[Operation]] = []
     with open(path, "r") as file:
         data = json.load(file)
         trains = data["trains"]
-        for i, train in enumerate(trains):
-            for y, operation in enumerate(train):
+        for train in trains:
+            trains_list = []
+            for operation in train:
                 op = Operation()
-                key = "start_up"
+                key = "start_ub"
                 if key in operation:
-                    op.upper_bound = operation[key]
+                    print("start")
+                    op.lower_bound = operation[key]
                 key = "min_duration"
                 if key in operation:
                     op.minimal_duration = operation[key]
                 key = "successors"
                 if key in operation:
                     op.succesors = operation[key]
+                op.resources = []
                 key = "resources"
                 if key in operation:
+                    print(operation[key])
                     for res in operation[key]:
                         resurce = Resource(res["resource"])
                         key = "release_time"
                         if key in res:
                             resurce.release__time = res[key]
                         op.resources.append(resurce)
-                result[(i, y)] = op
-
+                trains_list.append(op)
+            result.append(trains_list)
     return result
