@@ -29,13 +29,15 @@ if __name__ == "__main__":
     trains = read_file.get_operations(path)
 
     print_operations(trains)
+    graphes = [graphe.create_graphe(train) for train in trains]
 
     for i, train in enumerate(trains):
         plt.clf()
-        g = graphe.create_graphe(train)
+        g = graphes[i]
         nx.draw(g, with_labels=True, node_color='skyblue',
                 node_size=300, font_size=9, font_weight='bold')
         plt.savefig(f"graphen/train{i}.png")
 
-    sol = solver.Solver(trains, clac_maxtime(trains))
+    sol = solver.Solver(trains, clac_maxtime(trains), graphes)
     sol.print()
+    sol.solve()
