@@ -7,17 +7,16 @@ class Solver:
         self.vars = []
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
+        self.model = cp_model.CpModel()
         for time in range(timeslots):
             slot = []
-            for train in trains:
+            for i, train in enumerate(trains):
                 train_slot = []
-                for op in train:
+                for op in range(len(train)):
                     train_slot.append(self.model.new_bool_var(
-                        f"train {train}:op {op} ({time})"))
+                        f"train{i}:op{op} ({time})"))
                 slot.append(train_slot)
             self.vars.append(slot)
-
-        self.model = cp_model.CpModel()
 
     def print(self):
         for i, trains in enumerate(self.vars):
