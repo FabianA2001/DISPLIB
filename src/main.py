@@ -1,4 +1,5 @@
 import read_file
+from read_file import Operation
 import graphe
 import solver
 
@@ -26,10 +27,13 @@ if __name__ == "__main__":
 
     # path = "displib_instances_testing/line1_critical_0.json"
     path = "displib_instances_testing/displib_testinstances_headway1.json"
-    trains = read_file.get_operations(path)
-
+    trains: list[list[Operation]] = read_file.get_operations(path)
     print_operations(trains)
+
     graphes = [graphe.create_graphe(train) for train in trains]
+    # list[graph]
+    # der index gibt den Zug an
+    # für jeden Zug einen Graphen
 
     for i, train in enumerate(trains):
         plt.clf()

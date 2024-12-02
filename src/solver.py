@@ -4,6 +4,9 @@ from ortools.sat.python import cp_model
 
 class Solver:
     def __init__(self, trains, timeslots, graphes) -> None:
+        # vars sind : list[list[list[bool]]]
+        #             time  train operation
+        #             immer der Index
         self.vars = []
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
