@@ -13,16 +13,19 @@ class Resource:
 
 
 class Operation:
-    def __init__(self, min_dur: int = -1, low_bound: int = -1, upper_bound: int = -1, res: list[Resource] = [], successors: list[int] = []) -> None:
+    def __init__(self, min_dur: int = -1, low_bound: int = -1, upper_bound: int = -1, res: list[Resource] = [], successors: list[int] = [], threshold: int = 0, coeff: int = 0, increment: int = 0) -> None:
         # -1 -> not set
         self.minimal_duration: int = min_dur
         self.lower_bound: int = low_bound
         self.upper_bound: int = upper_bound
         self.resources: list[Resource] = res
         self.succesors: list[int] = successors
+        self.threshold: int = threshold
+        self.coeff: int = coeff
+        self.increment: int = increment
 
     def __repr__(self) -> str:
-        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound}\""
+        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound}, coeff: {self.coeff}, thres: {self.threshold}\""
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
@@ -32,9 +35,9 @@ def get_operations(path: str) -> list[list[Operation]]:
     with open(path, "r") as file:
         data = json.load(file)
         trains = data["trains"]
-        for train in trains:
+        for train_index in trains:
             trains_list = []
-            for operation in train:
+            for operation in train_index:
                 op = Operation()
                 key = "start_ub"
                 if key in operation:
@@ -56,4 +59,12 @@ def get_operations(path: str) -> list[list[Operation]]:
                         op.resources.append(resurce)
                 trains_list.append(op)
             result.append(trains_list)
+
+        objektives = data["objective"]
+        for obj in objektives:
+            train_index = obj["train"]
+            ob_index = obj["operation"]
+            op: Operation = result[train_index][ob_index]
+            op.threshold = obj["threshold"]
+            op.coeff = obj["coeff"]
     return result
