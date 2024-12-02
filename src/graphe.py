@@ -1,6 +1,6 @@
 import networkx as nx
 from typing import Dict
-from read_file import Operation
+from access_file import Operation
 
 
 def create_graphe(train: list[Operation]):

@@ -68,3 +68,19 @@ def get_operations(path: str) -> list[list[Operation]]:
             op.threshold = obj["threshold"]
             op.coeff = obj["coeff"]
     return result
+
+def save_result(solver,vars):
+    events=[]
+    for time,timeslot in enumerate(vars):
+        for t,train in enumerate(timeslot):
+            for id,operation in enumerate(train):
+                if solver.value(operation):
+                    event={"time":time, "train":t,"operation":id}
+                    events.append(event)
+    data={
+        "objective_value":solver.ObjectiveValue(),
+        "events":events
+    }
+    # JSON-Datei erstellen
+    with open('solution.json', 'w') as json_file:
+        json.dump(data, json_file, indent=4)
