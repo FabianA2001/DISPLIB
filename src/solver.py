@@ -51,15 +51,18 @@ class Solver:
         for train in range(len(self.trains)):
             for slot in range(self.timeslots):
                 self.model.add(sum(self.vars[slot][train][op] for op, _ in enumerate(self.trains[train])) == 1)
+
     def constraint_start_at_start(self):
         #The start operation has to be the first operation
         for train in range(len(self.trains)):
             self.model.add(self.vars[0][train][0] == 1)
+
     def constraint_operation_length(self):
         #The train can spend 0 timeslots at an operation or at least as many as the operations minimum length
         for train in range(len(self.trains)):
             for op in range(len(self.trains[train])):
                 self.model.add_bool_or([sum(self.vars[slot][train][op] for slot in range(self.timeslots)) == 0, sum(self.vars[slot][train][op] for slot in self.timeslots) >= self.trains[train][op].minimal_duration])
+
     def constraint_end_at_last_op(self):
         #The end has to be the last operation
         pass
