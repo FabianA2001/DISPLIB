@@ -12,6 +12,7 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
+        self.timeslots = timeslots
         for time in range(timeslots):
             slot = []
             for i, train in enumerate(trains):
@@ -36,6 +37,20 @@ class Solver:
                     opdelay+= (op.coeff*max(0,t-op.threshold)+ op.increment*self.big_H(t,op.threshold))*var
         self.model.minimize(opdelay)
 
+
+    def constraint_always_there(self):
+        for train in range(len(self.trains)):
+            for slot in range(self.timeslots):
+                self.model.add(sum(self.vars[slot][train][op] for op, _ in enumerate(self.trains[train])) == 1)
+    def constraint_start_at_start(self):
+        for train in range(len(self.trains)):
+            self.model.add(self.vars[0][train][0] == 1)
+    def constraint_operation_length(self):
+        for train in range(len(self.trains)):
+            for op in range(len(self.trains[train])):
+                self.model.add_bool_or([sum(self.vars[slot][train][op] for slot in self.timeslots) == 0, sum(self.vars[slot][train][op] for slot in self.timeslots) == self.trains[train][op].minimal_duration])
+
+
     def print(self):
         for i, trains in enumerate(self.vars):
             print(f"timeslot {i}")
@@ -46,6 +61,7 @@ class Solver:
     def solve(self):
         solver = cp_model.CpSolver()
         self.setObjective()
+        self.constraint_always_there()
         solver.solve(self.model)
 
         save_result(solver,self.vars)
