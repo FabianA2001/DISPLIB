@@ -48,7 +48,7 @@ class Solver:
     def constraint_operation_length(self):
         for train in range(len(self.trains)):
             for op in range(len(self.trains[train])):
-                self.model.add_bool_or([sum(self.vars[slot][train][op] for slot in self.timeslots) == 0, sum(self.vars[slot][train][op] for slot in self.timeslots) == self.trains[train][op].minimal_duration])
+                self.model.add_bool_or([sum(self.vars[slot][train][op] for slot in self.timeslots) == 0, sum(self.vars[slot][train][op] for slot in self.timeslots) >= self.trains[train][op].minimal_duration])
 
 
     def print(self):
