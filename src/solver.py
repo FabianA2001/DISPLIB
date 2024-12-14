@@ -65,15 +65,26 @@ class Solver:
 
     def constraint_end_at_last_op(self):
         #The end has to be the last operation
-        pass
+        for train in range(len(self.trains)):
+            last_op = len(self.trains[train]) - 1
+            self.model.add(self.vars[self.timeslots - 1][train][last_op] == 1)
 
     def constraint_consecutive(self):
         #An operaton has to take place in consecutive timeslots
-        pass
+        for train in range(len(self.trains)):
+            for op in range(len(self.trains[train])):
+                for slot in range(self.timeslots - 1):
+                    self.model.add(self.vars[slot][train][op] <= self.vars[slot + 1][train][op])
 
     def constraint_successor(self):
         #The order of the operations for one train has to be a path in the graph
-        pass
+        for train in range(len(self.trains)):
+            for op, operation in enumerate(self.trains[train]):
+                for succ in operation.successors:
+                    for slot in range(self.timeslots - 1):
+                        self.model.add(self.vars[slot][train][op] == 1).OnlyEnforceIf(
+                            self.vars[slot + 1][train][succ]
+                        )
 
     def constraint_resource(self):
         #A resource can only be used by one train at a time
