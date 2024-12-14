@@ -80,10 +80,10 @@ class Solver:
         #The order of the operations for one train has to be a path in the graph
         for train in range(len(self.trains)):
             for op, operation in enumerate(self.trains[train]):
-                for succ in operation.successors:
+                for successor in operation.successors:
                     for slot in range(self.timeslots - 1):
                         self.model.add(self.vars[slot][train][op] == 1).OnlyEnforceIf(
-                            self.vars[slot + 1][train][succ]
+                            self.vars[slot + 1][train][successor]
                         )
 
     def constraint_resource(self):
@@ -105,6 +105,12 @@ class Solver:
         solver = cp_model.CpSolver()
         self.setObjective()
         self.constraint_always_there()
+        self.constraint_start_at_start()
+        self.constraint_operation_length()
+        self.constraint_end_at_last_op()
+        self.constraint_consecutive()
+        self.constraint_successor()
+        self.constraint_resource()
         solver.solve(self.model)
 
         save_result(solver,self.vars)
