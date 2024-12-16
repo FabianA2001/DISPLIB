@@ -84,18 +84,17 @@ class Solver:
 
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
-        for train in range(len(self.trains)):
-            for op in range(len(self.trains[train])):
-                for slot in range(1, self.timeslots):
-                    # self.model.add(self.vars[slot][train][op] <= self.vars[slot + 1][train][op])
+        for slot in range(1, self.timeslots):
+            for train in range(len(self.trains)):
+                for op in range(len(self.trains[train])):
                     incoming_edges = list(self.graphes[train].in_edges(op))
-                    source_nodes = [edge[0]
-                                    for edge in incoming_edges]
+                    source_nodes = [edge[0] for edge in incoming_edges]
                     # stay in op or come from previous node in graphe
                     summ = sum(self.vars[slot-1][train][i]
                                for i in source_nodes)
                     self.model.add(
                         self.vars[slot-1][train][op] + summ >= self.vars[slot][train][op])
+                    self.model.add(self.vars[slot-1][train][op] + summ <= 1)
 
     def constraint_successor(self):
         # The order of the operations for one train has to be a path in the graph
@@ -133,10 +132,11 @@ class Solver:
         self.setObjective()
         self.constraint_always_there()
         self.constraint_start_at_start()
-        self.constraint_operation_length()
+        # self.constraint_operation_length()
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
-        # self.constraint_successor()
+        self.constraint_successor()
         # self.constraint_resource()
-        solver.solve(self.model)
+        # 3 ist unmöglich, 4 ist optimal
+        print("Status:", solver.solve(self.model))
         save_result(solver, self.vars)
