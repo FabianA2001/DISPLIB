@@ -39,10 +39,12 @@ class Solver:
         self.model.minimize(opdelay)
 
     def resources(self):
-        resources = set()
+        resources = []
         for train in self.trains:
             for op in train:
-                resources.update(op.resources)
+                for res in op.resources:
+                    if res.name not in resources:
+                        resources.append(res.name)
         return resources
 
     def constraint_always_there(self):
@@ -116,8 +118,9 @@ class Solver:
                 summ = 0
                 for index_train, train in enumerate(self.vars[slot]):
                     for index_op, _ in enumerate(train):
-                        if res in self.trains[index_train][index_op].resources:
-                            summ += self.vars[slot][index_train][index_op]
+                        for res_train in self.trains[index_train][index_op].resources:
+                            if res == res_train.name:
+                                summ += self.vars[slot][index_train][index_op]
                 self.model.add(summ <= 1)
 
     def print(self):
@@ -135,7 +138,7 @@ class Solver:
         self.constraint_operation_length()
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
-        #self.constraint_successor()
+        # self.constraint_successor()
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
