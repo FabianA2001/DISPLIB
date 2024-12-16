@@ -69,17 +69,21 @@ def get_operations(path: str) -> list[list[Operation]]:
             op.coeff = obj["coeff"]
     return result
 
-def save_result(solver,vars):
-    events=[]
-    for time,timeslot in enumerate(vars):
-        for t,train in enumerate(timeslot):
-            for id,operation in enumerate(train):
-                if solver.value(operation):
-                    event={"time":time, "train":t,"operation":id}
+
+def save_result(solver, vars):
+    events = []
+    for time_index, timeslot in enumerate(vars):
+        for train_index, train in enumerate(timeslot):
+            for operation_index, operation in enumerate(train):
+                print(operation)
+                print(solver.Value(operation))
+                if solver.Value(operation):
+                    event = {"time": time_index, "train": train_index,
+                             "operation": operation_index}
                     events.append(event)
-    data={
-        "objective_value":solver.ObjectiveValue(),
-        "events":events
+    data = {
+        "objective_value": solver.ObjectiveValue(),
+        "events": events
     }
     # JSON-Datei erstellen
     with open('solution.json', 'w') as json_file:
