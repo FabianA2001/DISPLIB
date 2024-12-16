@@ -118,7 +118,7 @@ class Solver:
                     for index_op, _ in enumerate(train):
                         if res in self.trains[index_train][index_op].resources:
                             summ += self.vars[slot][index_train][index_op]
-                self.model.add(summ == 1)
+                self.model.add(summ <= 1)
 
     def print(self):
         for i, trains in enumerate(self.vars):
@@ -132,11 +132,11 @@ class Solver:
         self.setObjective()
         self.constraint_always_there()
         self.constraint_start_at_start()
-        # self.constraint_operation_length()
+        self.constraint_operation_length()
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
-        self.constraint_successor()
-        # self.constraint_resource()
+        #self.constraint_successor()
+        self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
         save_result(solver, self.vars)
