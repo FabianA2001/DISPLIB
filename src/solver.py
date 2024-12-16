@@ -130,6 +130,12 @@ class Solver:
                 print(f"\ttrain {y}:")
                 print("\t\t" + str(train))
 
+    def max_operations(self):
+        max_op = []
+        for train in self.trains:
+            max_op.append(len(train)-1)
+        return max_op
+
     def solve(self):
         solver = cp_model.CpSolver()
         self.setObjective()
@@ -142,4 +148,5 @@ class Solver:
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
-        save_result(solver, self.vars)
+
+        save_result(solver, self.vars, self.max_operations())

@@ -70,15 +70,19 @@ def get_operations(path: str) -> list[list[Operation]]:
     return result
 
 
-def save_result(solver, vars):
+def save_result(solver, vars, max_operatins: list):
     events = []
+
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
                 if solver.Value(operation):
-                    event = {"time": time_index, "train": train_index,
-                             "operation": operation_index}
-                    events.append(event)
+                    if max_operatins[train_index] >= operation_index:
+                        event = {"time": time_index, "train": train_index,
+                                 "operation": operation_index}
+                        events.append(event)
+                    if max_operatins[train_index] == operation_index:
+                        max_operatins[train_index] = 0
     data = {
         "objective_value": solver.ObjectiveValue(),
         "events": events
