@@ -1,7 +1,7 @@
 from access_file import Operation
 from ortools.sat.python import cp_model
 from access_file import save_result
-
+import networkx as nx
 
 class Solver:
     def __init__(self, trains, timeslots, graphes) -> None:
@@ -46,6 +46,37 @@ class Solver:
                     if res.name not in resources:
                         resources.append(res.name)
         return resources
+
+    def find_resource_cycles(self, solver):
+        graph = nx.DiGraph()
+        graph.add_nodes_from(self.resources())
+        slot_cycles = []
+        for slot in range(self.timeslots-1):
+            graph.clear_edges()
+            for train in range(len(self.trains)):
+                resources_now = []
+                resources_next = []
+                op_now = 0
+                op_next = 0
+                for operation in range(len(self.trains[train])):
+                    if solver.value(self.vars[slot][train][operation]) == 1:
+                        resources_now += self.trains[train][operation].resources
+                        op_now = operation
+                    if solver.value(self.vars[slot+1][train][operation]) == 1:
+                        resources_next += self.trains[train][operation].resources
+                        op_next = operation
+                for now in resources_now:
+                    for next in resources_next:
+                        if now != next:
+                            graph.add_edge(now, next, x=(train, op_now, op_next))
+            cycles = nx.simple_cycles(graph)
+            for cycle in cycles:
+                critical_operations = []
+                for node in range(len(cycle) -1):
+                    critical_operations.append(graph[cycle[node]][cycle[node+1]]["x"])
+                critical_operations.append(graph[cycle[len(cycle)-1]][cycle[0]]["x"])
+                slot_cycles.append((slot, critical_operations))
+        return slot_cycles
 
     def constraint_always_there(self):
         # At every timeslot, every train has to be in exactly one operation
@@ -123,6 +154,9 @@ class Solver:
                                 summ += self.vars[slot][index_train][index_op]
                 self.model.add(summ <= 1)
 
+    def constraint_destroy_cycle(self, cycle):
+        pass
+
     def print(self):
         for i, trains in enumerate(self.vars):
             print(f"timeslot {i}")
@@ -148,5 +182,13 @@ class Solver:
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
+        cycles = self.find_resource_cycles(solver)
+        """
+        while (len(cycles) > 0):
+            for cycle in cycles:
+                self.constraint_destroy_cycle(cycle)
+                print("Status:", solver.solve(self.model))
+                cycles = self.find_resource_cycles(solver)
+        """
 
         save_result(solver, self.vars, self.max_operations())
