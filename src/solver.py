@@ -155,7 +155,7 @@ class Solver:
                 self.model.add(summ <= 1)
 
     def constraint_destroy_cycle(self, cycle):
-        pass
+        self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] + self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
 
     def print(self):
         for i, trains in enumerate(self.vars):
@@ -183,12 +183,10 @@ class Solver:
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
         cycles = self.find_resource_cycles(solver)
-        """
         while (len(cycles) > 0):
             for cycle in cycles:
                 self.constraint_destroy_cycle(cycle)
-                print("Status:", solver.solve(self.model))
-                cycles = self.find_resource_cycles(solver)
-        """
+            print("Status:", solver.solve(self.model))
+            cycles = self.find_resource_cycles(solver)
 
         save_result(solver, self.vars, self.max_operations())
