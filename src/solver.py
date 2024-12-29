@@ -115,6 +115,16 @@ class Solver:
             last_op = len(self.trains[train]) - 1
             self.model.add(self.vars[self.timeslots - 1][train][last_op] == 1)
 
+    def constraint_resource_release(self):
+        # Resources can only be used after their release time.
+        for train_idx, train in enumerate(self.trains):
+            for op_idx, operation in enumerate(train):
+                if "resources" in operation:
+                    for resource in operation.resources:
+                        release_time = resource.get("release_time", 0)
+                        for slot in range(release_time):
+                            self.model.add(self.vars[slot][train_idx][op_idx] == 0)
+
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
         for slot in range(1, self.timeslots):
@@ -179,6 +189,7 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         # self.constraint_successor()
+        self.constraint_operation_bounds()
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
