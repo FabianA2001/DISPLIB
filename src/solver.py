@@ -189,7 +189,7 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         # self.constraint_successor()
-        self.constraint_operation_bounds()
+        self.constraint_resource_release()
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
