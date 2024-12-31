@@ -8,7 +8,7 @@ class Resource:
         self.release__time: int = release_time
 
     def __repr__(self) -> str:
-        # return self.name + str(self.release__time)
+        return self.name + " " + str(self.release__time)
         return self.name
 
 

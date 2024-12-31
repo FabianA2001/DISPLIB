@@ -201,6 +201,9 @@ class Solver:
         self.constraint_start_at_start()
         self.constraint_operation_length()
         self.constraint_end_at_last_op()
+        self.constraint_consecutive()
+        self.constraint_resource()
+        # self.constraint_upper_bound()
 
         # warscheinlich unnötig
         # self.constraint_successor()
@@ -208,23 +211,19 @@ class Solver:
         # compiliert nicht
         # self.constraint_resource_release()
 
-        self.constraint_resource()
-        # self.constraint_upper_bound()
-        self.constraint_consecutive()
-
         # 3 ist unmöglich, 4 ist optimal
         status = solver.solve(self.model)
         print("Status:", status)
         assert (status == 4)
 
-        cycles = self.find_resource_cycles(solver)
-        while (len(cycles) > 0):
-            for cycle in cycles:
-                self.constraint_destroy_cycle(cycle)
-            status = solver.solve(self.model)
-            print("Status:", status)
-            assert (status == 4)
+        # cycles = self.find_resource_cycles(solver)
+        # while (len(cycles) > 0):
+        #     for cycle in cycles:
+        #         self.constraint_destroy_cycle(cycle)
+        #     status = solver.solve(self.model)
+        #     print("Status:", status)
+        #     assert (status == 4)
 
-            cycles = self.find_resource_cycles(solver)
+        #     cycles = self.find_resource_cycles(solver)
 
         save_result(solver, self.vars, self.max_operations())
