@@ -173,6 +173,14 @@ class Solver:
         self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] +
                        self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
 
+    def constraint_upper_bound(self):
+        for index_train, train in enumerate(self.trains):
+            for index_operation, operatin in enumerate(train):
+                if operatin.upper_bound != -1:
+                    for i in range(operatin.upper_bound + 1, len(self.vars)):
+                        self.model.add(
+                            self.vars[i][index_train][index_operation] == 0)
+
     def print(self):
         for i, trains in enumerate(self.vars):
             print(f"timeslot {i}")
@@ -193,17 +201,30 @@ class Solver:
         self.constraint_start_at_start()
         self.constraint_operation_length()
         self.constraint_end_at_last_op()
-        self.constraint_consecutive()
+
+        # warscheinlich unnötig
         # self.constraint_successor()
+
+        # compiliert nicht
         # self.constraint_resource_release()
+
         self.constraint_resource()
+        # self.constraint_upper_bound()
+        self.constraint_consecutive()
+
         # 3 ist unmöglich, 4 ist optimal
-        print("Status:", solver.solve(self.model))
+        status = solver.solve(self.model)
+        print("Status:", status)
+        assert (status == 4)
+
         cycles = self.find_resource_cycles(solver)
         while (len(cycles) > 0):
             for cycle in cycles:
                 self.constraint_destroy_cycle(cycle)
-            print("Status:", solver.solve(self.model))
+            status = solver.solve(self.model)
+            print("Status:", status)
+            assert (status == 4)
+
             cycles = self.find_resource_cycles(solver)
 
         save_result(solver, self.vars, self.max_operations())

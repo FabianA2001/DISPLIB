@@ -25,7 +25,7 @@ class Operation:
         self.increment: int = increment
 
     def __repr__(self) -> str:
-        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound}, coeff: {self.coeff}, thres: {self.threshold}\""
+        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound},end: {self.upper_bound}, coeff: {self.coeff}, thres: {self.threshold}\""
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
@@ -41,7 +41,7 @@ def get_operations(path: str) -> list[list[Operation]]:
                 op = Operation()
                 key = "start_ub"
                 if key in operation:
-                    op.lower_bound = operation[key]
+                    op.upper_bound = operation[key]
                 key = "min_duration"
                 if key in operation:
                     op.minimal_duration = operation[key]
