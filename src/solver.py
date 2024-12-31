@@ -3,6 +3,7 @@ from ortools.sat.python import cp_model
 from access_file import save_result
 import networkx as nx
 
+
 class Solver:
     def __init__(self, trains, timeslots, graphes) -> None:
         # vars sind : list[list[list[bool]]]
@@ -68,13 +69,16 @@ class Solver:
                 for now in resources_now:
                     for next in resources_next:
                         if now != next:
-                            graph.add_edge(now, next, x=(train, op_now, op_next))
+                            graph.add_edge(now, next, x=(
+                                train, op_now, op_next))
             cycles = nx.simple_cycles(graph)
             for cycle in cycles:
                 critical_operations = []
-                for node in range(len(cycle) -1):
-                    critical_operations.append(graph[cycle[node]][cycle[node+1]]["x"])
-                critical_operations.append(graph[cycle[len(cycle)-1]][cycle[0]]["x"])
+                for node in range(len(cycle) - 1):
+                    critical_operations.append(
+                        graph[cycle[node]][cycle[node+1]]["x"])
+                critical_operations.append(
+                    graph[cycle[len(cycle)-1]][cycle[0]]["x"])
                 slot_cycles.append((slot, critical_operations))
         return slot_cycles
 
@@ -123,7 +127,8 @@ class Solver:
                     for resource in operation.resources:
                         release_time = resource.get("release_time", 0)
                         for slot in range(release_time):
-                            self.model.add(self.vars[slot][train_idx][op_idx] == 0)
+                            self.model.add(
+                                self.vars[slot][train_idx][op_idx] == 0)
 
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
@@ -165,7 +170,8 @@ class Solver:
                 self.model.add(summ <= 1)
 
     def constraint_destroy_cycle(self, cycle):
-        self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] + self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
+        self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] +
+                       self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
 
     def print(self):
         for i, trains in enumerate(self.vars):
@@ -189,7 +195,7 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         # self.constraint_successor()
-        self.constraint_resource_release()
+        # self.constraint_resource_release()
         self.constraint_resource()
         # 3 ist unmöglich, 4 ist optimal
         print("Status:", solver.solve(self.model))
