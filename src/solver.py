@@ -173,13 +173,15 @@ class Solver:
         self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] +
                        self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
 
-    def constraint_upper_bound(self):
+    def constraint_start_upper_bound(self):
         for index_train, train in enumerate(self.trains):
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
-                    for i in range(operatin.upper_bound + 1, len(self.vars)):
-                        self.model.add(
-                            self.vars[i][index_train][index_operation] == 0)
+                    sum=0
+                    for i in range(0,operatin.upper_bound,):
+                        sum=sum+self.vars[i][index_train][index_operation]
+                    self.model.add(
+                            sum>=1)
 
     def print(self):
         for i, trains in enumerate(self.vars):
@@ -203,7 +205,7 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         self.constraint_resource()
-        # self.constraint_upper_bound()
+        #self.constraint_start_upper_bound()
 
         # warscheinlich unnötig
         # self.constraint_successor()

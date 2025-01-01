@@ -77,12 +77,13 @@ def save_result(solver, vars, max_operatins: list):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
                 if solver.Value(operation):
-                    if max_operatins[train_index] >= operation_index:
-                        event = {"time": time_index, "train": train_index,
-                                 "operation": operation_index}
-                        events.append(event)
-                    if max_operatins[train_index] == operation_index:
-                        max_operatins[train_index] = 0
+                    if time_index==0 or not solver.Value(vars[time_index-1][train_index][operation_index]):
+                        if max_operatins[train_index] >= operation_index:
+                            event = {"time": time_index, "train": train_index,
+                                    "operation": operation_index}
+                            events.append(event)
+                        if max_operatins[train_index] == operation_index:
+                            max_operatins[train_index] = 0
     data = {
         "objective_value": solver.ObjectiveValue(),
         "events": events
