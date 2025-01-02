@@ -143,7 +143,9 @@ class Solver:
                                for i in source_nodes)
                     self.model.add(
                         self.vars[slot-1][train][op] + summ >= self.vars[slot][train][op])
-                    self.model.add(self.vars[slot-1][train][op] + summ <= 1)
+
+                    # glaube unötig wegen constraint_always_there
+                    # self.model.add(self.vars[slot-1][train][op] + summ <= 1)
 
     def constraint_successor(self):
         # The order of the operations for one train has to be a path in the graph
@@ -178,12 +180,11 @@ class Solver:
         for index_train, train in enumerate(self.trains):
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
-                    print(operatin)
-                    sum = 0
+                    summ = self.vars[0][index_train][index_operation]
                     for i in range(0, operatin.upper_bound,):
-                        sum = sum+self.vars[i][index_train][index_operation]
+                        summ += self.vars[i][index_train][index_operation]
                     self.model.add(
-                        sum >= 1)
+                        summ >= 1)
 
     def print(self, value=False):
         # value erst True setzen wenn gesolvt wurde
@@ -217,7 +218,7 @@ class Solver:
         self.constraint_resource()
 
         # wird irgendwie grade zufällig ohne den constraint erfüllt aber mit geht es nicht
-        # self.constraint_start_upper_bound()
+        self.constraint_start_upper_bound()
 
         # warscheinlich unnötig
         # self.constraint_successor()

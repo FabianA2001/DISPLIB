@@ -29,6 +29,8 @@ class Operation:
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
+# TODO lower bound
+
 
 def get_operations(path: str) -> list[list[Operation]]:
     result: list[list[Operation]] = []
