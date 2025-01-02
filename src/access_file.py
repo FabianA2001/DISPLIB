@@ -3,7 +3,7 @@ from typing import Dict
 
 
 class Resource:
-    def __init__(self, name: str, release_time: int = -1) -> None:
+    def __init__(self, name: str, release_time: int = 0) -> None:
         self.name: str = name
         self.release__time: int = release_time
 
