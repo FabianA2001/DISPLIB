@@ -6,14 +6,15 @@ import networkx as nx
 
 class Solver:
     def __init__(self, trains, timeslots, graphes) -> None:
-        # vars sind : list[list[list[bool]]]
-        #             time  train operation
-        #             immer der Index
-        self.vars = []
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
         self.timeslots = timeslots
+
+        # vars sind : list[list[list[bool]]]
+        #             time  train operation
+        #             immer der Index
+        self.vars = []
         for time in range(timeslots):
             slot = []
             for i, train in enumerate(trains):
@@ -177,18 +178,27 @@ class Solver:
         for index_train, train in enumerate(self.trains):
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
-                    sum=0
-                    for i in range(0,operatin.upper_bound,):
-                        sum=sum+self.vars[i][index_train][index_operation]
+                    print(operatin)
+                    sum = 0
+                    for i in range(0, operatin.upper_bound,):
+                        sum = sum+self.vars[i][index_train][index_operation]
                     self.model.add(
-                            sum>=1)
+                        sum >= 1)
 
-    def print(self):
+    def print(self, value=False):
+        # value erst True setzen wenn gesolvt wurde
         for i, trains in enumerate(self.vars):
             print(f"timeslot {i}")
             for y, train in enumerate(trains):
                 print(f"\ttrain {y}:")
-                print("\t\t" + str(train))
+                if not value:
+                    print("\t\t" + str(train))
+                else:
+                    print("\t\t", end="")
+                    for index_var, var in enumerate(train):
+                        print(
+                            f"op{index_var}: {self.solver.value(var)}\t", end="")
+                    print()
 
     def max_operations(self):
         max_op = []
@@ -197,7 +207,7 @@ class Solver:
         return max_op
 
     def solve(self):
-        solver = cp_model.CpSolver()
+        self.solver = cp_model.CpSolver()
         self.setObjective()
         self.constraint_always_there()
         self.constraint_start_at_start()
@@ -205,7 +215,9 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         self.constraint_resource()
-        #self.constraint_start_upper_bound()
+
+        # wird irgendwie grade zufällig ohne den constraint erfüllt aber mit geht es nicht
+        # self.constraint_start_upper_bound()
 
         # warscheinlich unnötig
         # self.constraint_successor()
@@ -214,7 +226,7 @@ class Solver:
         # self.constraint_resource_release()
 
         # 3 ist unmöglich, 4 ist optimal
-        status = solver.solve(self.model)
+        status = self.solver.solve(self.model)
         print("Status:", status)
         assert (status == 4)
 
@@ -228,4 +240,4 @@ class Solver:
 
         #     cycles = self.find_resource_cycles(solver)
 
-        save_result(solver, self.vars, self.max_operations())
+        save_result(self.solver, self.vars, self.max_operations())

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # path = "displib_instances_testing/line1_critical_0.json"
     path = "displib_instances_testing/displib_testinstances_headway1.json"
     trains: list[list[Operation]] = access_file.get_operations(path)
-    # print_operations(trains)
+    print_operations(trains)
 
     graphes = [graphe.create_graphe(train) for train in trains]
     # list[graph]
@@ -45,3 +45,4 @@ if __name__ == "__main__":
     sol = solver.Solver(trains, clac_maxtime(trains)*2, graphes)
     # sol.print()
     sol.solve()
+    sol.print(True)

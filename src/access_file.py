@@ -25,7 +25,7 @@ class Operation:
         self.increment: int = increment
 
     def __repr__(self) -> str:
-        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound},end: {self.upper_bound}, coeff: {self.coeff}, thres: {self.threshold}\""
+        return f"\"dur: {self.minimal_duration}, suc: {self.succesors}, res: {self.resources}, start: {self.lower_bound},end: {self.upper_bound}, coeff: {self.coeff}, thres: {self.threshold}, incre: {self.increment}\""
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
@@ -77,10 +77,10 @@ def save_result(solver, vars, max_operatins: list):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
                 if solver.Value(operation):
-                    if time_index==0 or not solver.Value(vars[time_index-1][train_index][operation_index]):
+                    if time_index == 0 or not solver.Value(vars[time_index-1][train_index][operation_index]):
                         if max_operatins[train_index] >= operation_index:
                             event = {"time": time_index, "train": train_index,
-                                    "operation": operation_index}
+                                     "operation": operation_index}
                             events.append(event)
                         if max_operatins[train_index] == operation_index:
                             max_operatins[train_index] = 0
