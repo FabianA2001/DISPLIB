@@ -210,7 +210,7 @@ class Solver:
     def solve(self):
         self.solver = cp_model.CpSolver()
         self.setObjective()
-        self.constraint_always_there()
+
         self.constraint_start_at_start()
         self.constraint_operation_length()
         self.constraint_end_at_last_op()
@@ -218,6 +218,11 @@ class Solver:
         self.constraint_resource()
 
         self.constraint_start_upper_bound()
+
+        # in deren der Lösung (displib_solution_testinstances_headway1) ist
+        # Zug 0 im 0 zeitslot in operation 0 und 1
+        # aber ohne geht es garnicht mehr
+        self.constraint_always_there()
 
         # warscheinlich unnötig
         # self.constraint_successor()
