@@ -217,7 +217,6 @@ class Solver:
         self.constraint_consecutive()
         self.constraint_resource()
 
-        # wird irgendwie grade zufällig ohne den constraint erfüllt aber mit geht es nicht
         self.constraint_start_upper_bound()
 
         # warscheinlich unnötig
