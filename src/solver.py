@@ -124,12 +124,11 @@ class Solver:
         # Resources can only be used after their release time.
         for train_idx, train in enumerate(self.trains):
             for op_idx, operation in enumerate(train):
-                if "resources" in operation:
-                    for resource in operation.resources:
-                        release_time = resource.get("release_time", 0)
-                        for slot in range(release_time):
-                            self.model.add(
-                                self.vars[slot][train_idx][op_idx] == 0)
+                for resource in operation.resources:
+                    release_time = resource.release__time
+                    for slot in range(release_time):
+                        self.model.add(
+                            self.vars[slot][train_idx][op_idx] == 0)
 
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
@@ -174,7 +173,8 @@ class Solver:
 
     def constraint_destroy_cycle(self, cycle):
         self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] +
-                       self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
+                       self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1])))
+                       < 2*len(cycle[1]))
 
     def constraint_start_upper_bound(self):
         for index_train, train in enumerate(self.trains):
@@ -223,7 +223,7 @@ class Solver:
         # warscheinlich unnötig
         # self.constraint_successor()
 
-        # compiliert nicht
+        # compiliert jetzt, tut aber nicht, was es soll
         # self.constraint_resource_release()
 
         # 3 ist unmöglich, 4 ist optimal
@@ -231,14 +231,14 @@ class Solver:
         print("Status:", status)
         assert (status == 4)
 
-        # cycles = self.find_resource_cycles(solver)
-        # while (len(cycles) > 0):
-        #     for cycle in cycles:
-        #         self.constraint_destroy_cycle(cycle)
-        #     status = solver.solve(self.model)
-        #     print("Status:", status)
-        #     assert (status == 4)
+        cycles = self.find_resource_cycles(self.solver)
+        while (len(cycles) > 0):
+            for cycle in cycles:
+                self.constraint_destroy_cycle(cycle)
+            status = self.solver.solve(self.model)
+            print("Status:", status)
+            assert (status == 4)
 
-        #     cycles = self.find_resource_cycles(solver)
+            cycles = self.find_resource_cycles(self.solver)
 
         save_result(self.solver, self.vars, self.max_operations())
