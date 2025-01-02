@@ -172,7 +172,8 @@ class Solver:
 
     def constraint_destroy_cycle(self, cycle):
         self.model.add(sum(self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] +
-                       self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1]))))
+                       self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1])))
+                       < 2*len(cycle[1]))
 
     def constraint_start_upper_bound(self):
         for index_train, train in enumerate(self.trains):
