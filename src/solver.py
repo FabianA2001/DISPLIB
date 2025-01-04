@@ -245,4 +245,4 @@ class Solver:
 
             cycles = self.find_resource_cycles(self.solver)
 
-        save_result(self.solver, self.vars, self.max_operations())
+        save_result(self.solver, self.vars, self.max_operations(), self.trains)

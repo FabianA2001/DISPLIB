@@ -29,6 +29,7 @@ class Operation:
 
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
+
 # TODO lower bound
 
 
@@ -69,25 +70,38 @@ def get_operations(path: str) -> list[list[Operation]]:
             op: Operation = result[train_index][ob_index]
             op.threshold = obj["threshold"]
             op.coeff = obj["coeff"]
+
     return result
 
 
-def save_result(solver, vars, max_operatins: list):
-    events = []
+def big_H(a, b):
+    if (a <= b):
+        return 0
+    else:
+        return 1
 
+
+def save_result(solver, vars, max_operatins: list, trainss):
+    events = []
+    opdelay = 0
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
                 if solver.Value(operation):
+
+                    op = trainss[train_index][operation_index]
+
                     if time_index == 0 or not solver.Value(vars[time_index-1][train_index][operation_index]):
                         if max_operatins[train_index] >= operation_index:
+                            opdelay += (op.coeff*max(0, time_index-op.threshold) +
+                                        op.increment*big_H(time_index, op.threshold))
                             event = {"time": time_index, "train": train_index,
                                      "operation": operation_index}
                             events.append(event)
                         if max_operatins[train_index] == operation_index:
                             max_operatins[train_index] = 0
     data = {
-        "objective_value": solver.ObjectiveValue(),
+        "objective_value": opdelay,
         "events": events
     }
     # JSON-Datei erstellen
