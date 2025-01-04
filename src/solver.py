@@ -130,6 +130,52 @@ class Solver:
                         self.model.add(
                             self.vars[slot][train_idx][op_idx] == 0)
 
+    def constraint_resource_release2(self):
+
+        ops_per_res = []
+        for i, ressource in enumerate(self.resources()):
+            ops_per_res_i = []
+            for trainid, train in enumerate(self.trains):
+                for opid, operation in enumerate(train):
+
+                    for res in operation.resources:
+                        if res.name == ressource:
+                            ops_per_res_i.append((trainid, opid))
+            ops_per_res.append(ops_per_res_i)
+        print(ops_per_res)
+
+        for timeid, slot in enumerate(self.vars):
+            for trainid, train in enumerate(self.trains):
+                for opid, op in enumerate(train):
+
+                    is_equal = self.model.NewBoolVar(
+                        f'is_equal_{timeid}_{trainid}_{opid}')
+                    self.model.Add(
+                        self.vars[timeid][trainid][opid] == 1).OnlyEnforceIf(is_equal)
+                    is_equal2 = self.model.NewBoolVar(
+                        f'is_equal2_{timeid}_{trainid}_{opid}')
+                    if timeid > 0:
+
+                        self.model.Add(
+                            self.vars[timeid-1][trainid][opid] == 0).OnlyEnforceIf(is_equal2)
+
+                    for res in op.resources:
+                        res_id = self.resources().index(res.name)
+
+                        for tuple in ops_per_res[res_id]:
+                            if tuple[1] != op:
+                                summ = sum(self.vars[i][trainid][opid]
+                                           for i in range(0, timeid))
+                                for t in range(res.release__time):
+                                    if timeid+t < len(self.vars):
+                                        print("hi")
+                                        is_equal3 = self.model.NewBoolVar(
+                                            f'is_equal3_{timeid+t}_{tuple[0]}_{tuple[1]}')
+                                        self.model.Add(
+                                            self.vars[timeid+t][tuple[0]][tuple[1]] == 0).OnlyEnforceIf(is_equal3)
+                                        self.model.add(is_equal3 <= is_equal)
+                                        self.model.add(is_equal3 <= is_equal2)
+
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
         for slot in range(1, self.timeslots):
@@ -229,6 +275,9 @@ class Solver:
 
         # compiliert jetzt, tut aber nicht, was es soll
         # self.constraint_resource_release()
+
+        # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
+        # self.constraint_resource_release2()
 
         # 3 ist unmöglich, 4 ist optimal
         status = self.solver.solve(self.model)
