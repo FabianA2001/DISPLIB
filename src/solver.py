@@ -144,12 +144,14 @@ class Solver:
         for train_idx, train in enumerate(self.trains):
             for op_idx, operation in enumerate(train):
                 for resource in operation.resources:
-                    ops_per_resource[resource.name].append((train_idx, op_idx, operation))
+                    ops_per_resource[resource.name].append(
+                        (train_idx, op_idx, operation))
 
         for time_id in range(self.timeslots):
             for resource_name, operations in ops_per_resource.items():
                 for train_idx, op_idx, operation in operations:
-                    release_time = max(res.release__time for res in operation.resources if res.name == resource_name)
+                    release_time = max(
+                        res.release__time for res in operation.resources if res.name == resource_name)
                     if release_time > 0:
                         is_active = self.vars[time_id][train_idx][op_idx]
 
@@ -273,6 +275,16 @@ class Solver:
                     self.model.add(
                         summ >= 1)
 
+    def constraint_start_lower_bound(self):
+        for index_train, train in enumerate(self.trains):
+            for index_operation, operatin in enumerate(train):
+                if operatin.upper_bound != -1:
+                    summ = 0
+                    for i in range(0, operatin.lower_bound,):
+                        summ += self.vars[i][index_train][index_operation]
+                    self.model.add(
+                        summ == 0)
+
     def print(self, value=False):
         # value erst True setzen wenn gesolvt wurde
         for i, trains in enumerate(self.vars):
@@ -306,6 +318,7 @@ class Solver:
         self.constraint_consecutive()
         self.constraint_resource()
         self.constraint_start_upper_bound()
+        self.constraint_start_lower_bound()
 
         # in deren der Lösung (displib_solution_testinstances_headway1) ist
         # Zug 0 im 0 zeitslot in operation 0 und 1
