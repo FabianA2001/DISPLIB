@@ -32,12 +32,22 @@ class Solver:
             return 1
 
     def setObjective(self):
+        # opdelay = 0
+        # for t, timeslot in enumerate(self.vars):
+        #     for train, time in zip(self.trains, timeslot):
+        #         for op, var in zip(train, time):
+        #             opdelay += (op.coeff*max(0, t-op.threshold) +
+        #                         op.increment*self.big_H(t, op.threshold))*var
+        # self.model.minimize(opdelay)
+
+        #################################
+        # WRONG
+        ################################
         opdelay = 0
         for t, timeslot in enumerate(self.vars):
             for train, time in zip(self.trains, timeslot):
                 for op, var in zip(train, time):
-                    opdelay += (op.coeff*max(0, t-op.threshold) +
-                                op.increment*self.big_H(t, op.threshold))*var
+                    opdelay += t*var
         self.model.minimize(opdelay)
 
     def resources(self):
@@ -86,9 +96,17 @@ class Solver:
     def constraint_always_there(self):
         # At every timeslot, every train has to be in exactly one operation
         for train in range(len(self.trains)):
-            for slot in range(self.timeslots):
+            for slot in range(0, self.timeslots):
                 self.model.add(sum(self.vars[slot][train][op]
                                for op, _ in enumerate(self.trains[train])) == 1)
+
+        # in 0 slot there can be the start and an other operation
+        # messes up the solution
+        # bei slot aus der 0 eine 1 machen
+
+        # for train in range(len(self.trains)):
+        #     self.model.add(sum(self.vars[0][train][op]
+        #                        for op in range(1, len(self.trains[train]))) <= 1)
 
     def constraint_start_at_start(self):
         # The start operation has to be the first operation
@@ -107,10 +125,8 @@ class Solver:
                 # Define boolean variables
                 condition1 = self.model.NewBoolVar('condition1')
                 condition2 = self.model.NewBoolVar('condition2')
-
                 # Enforce that exactly one of the conditions must be true
                 self.model.Add(condition1 + condition2 == 1)
-
                 self.model.add(con1).only_enforce_if(condition1)
                 self.model.add(con2).only_enforce_if(condition2)
 
@@ -178,19 +194,30 @@ class Solver:
 
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
+        # checks for timeslot 1 and up
         for slot in range(1, self.timeslots):
             for train in range(len(self.trains)):
                 for op in range(len(self.trains[train])):
-                    incoming_edges = list(self.graphes[train].in_edges(op))
-                    source_nodes = [edge[0] for edge in incoming_edges]
+                    outcoming_edges = list(self.graphes[train].in_edges(op))
+                    target_nodes = [edge[0] for edge in outcoming_edges]
                     # stay in op or come from previous node in graphe
                     summ = sum(self.vars[slot-1][train][i]
-                               for i in source_nodes)
+                               for i in target_nodes)
                     self.model.add(
                         self.vars[slot-1][train][op] + summ >= self.vars[slot][train][op])
 
-                    # glaube unötig wegen constraint_always_there
-                    # self.model.add(self.vars[slot-1][train][op] + summ <= 1)
+        # checks slot 0
+        # assumes op 0 is the start operation in every train
+        for train in range(len(self.trains)):
+            outcoming_edges = list(self.graphes[train].out_edges(0))
+            target_nodes = [edge[1] for edge in outcoming_edges]
+            target_nodes.append(0)
+            summ = 0
+            for op in range(len(self.trains[train])):
+                if op in target_nodes:
+                    continue
+                summ += self.vars[0][train][op]
+            self.model.add(summ == 0)
 
     def constraint_successor(self):
         # The order of the operations for one train has to be a path in the graph
@@ -262,7 +289,6 @@ class Solver:
         self.constraint_end_at_last_op()
         self.constraint_consecutive()
         self.constraint_resource()
-
         self.constraint_start_upper_bound()
 
         # in deren der Lösung (displib_solution_testinstances_headway1) ist
@@ -284,14 +310,15 @@ class Solver:
         print("Status:", status)
         assert (status == 4)
 
-        cycles = self.find_resource_cycles(self.solver)
-        while (len(cycles) > 0):
-            for cycle in cycles:
-                self.constraint_destroy_cycle(cycle)
-            status = self.solver.solve(self.model)
-            print("Status:", status)
-            assert (status == 4)
+        # vorläufig deaktiviert da cycles aktuell keine Probleme darstellen
+        # cycles = self.find_resource_cycles(self.solver)
+        # while (len(cycles) > 0):
+        #     for cycle in cycles:
+        #         self.constraint_destroy_cycle(cycle)
+        #     status = self.solver.solve(self.model)
+        #     print("Status:", status)
+        #     assert (status == 4)
 
-            cycles = self.find_resource_cycles(self.solver)
+        #     cycles = self.find_resource_cycles(self.solver)
 
         save_result(self.solver, self.vars, self.max_operations(), self.trains)
