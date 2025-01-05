@@ -138,14 +138,28 @@ class Solver:
 
     def constraint_resource_release(self):
         # Resources can only be used after their release time.
+        resources = self.resources()
+        ops_per_resource = {res.name: [] for res in resources}
+
         for train_idx, train in enumerate(self.trains):
             for op_idx, operation in enumerate(train):
-                if len(operation.resources) == 0:
-                    continue
-                print(operation.resources)
-                assert (len(operation.resources) == 1)
-                self.model.add(sum(self.vars[slot][train_idx][op_idx] for slot in range(
-                    self.timeslots)) >= operation.resources[0].release__time)
+                for resource in operation.resources:
+                    ops_per_resource[resource.name].append((train_idx, op_idx, operation))
+
+        for time_id in range(self.timeslots):
+            for resource_name, operations in ops_per_resource.items():
+                for train_idx, op_idx, operation in operations:
+                    release_time = max(res.release__time for res in operation.resources if res.name == resource_name)
+                    if release_time > 0:
+                        is_active = self.vars[time_id][train_idx][op_idx]
+
+                        for t in range(1, release_time + 1):
+                            if time_id + t < self.timeslots:
+                                for other_train_idx, other_op_idx, _ in operations:
+                                    if (other_train_idx, other_op_idx) != (train_idx, op_idx):
+                                        self.model.Add(
+                                            self.vars[time_id + t][other_train_idx][other_op_idx] == 0).OnlyEnforceIf(
+                                            is_active)
 
     def constraint_resource_release2(self):
         ops_per_res = []
@@ -302,7 +316,7 @@ class Solver:
         # self.constraint_successor()
 
         # compiliert jetzt, tut aber nicht, was es soll
-        # self.constraint_resource_release()
+        self.constraint_resource_release()
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()
