@@ -282,6 +282,8 @@ class Solver:
 
     def solve(self):
         self.solver = cp_model.CpSolver()
+        # ohne dieses Zeile ist es nicht Determinstisch
+        self.solver.parameters.num_search_workers = 1
         self.setObjective()
 
         self.constraint_start_at_start()
