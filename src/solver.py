@@ -55,8 +55,8 @@ class Solver:
         for train in self.trains:
             for op in train:
                 for res in op.resources:
-                    if res.name not in resources:
-                        resources.append(res.name)
+                    if res not in resources:
+                        resources.append(res)
         return resources
 
     def find_resource_cycles(self, solver):
@@ -140,14 +140,14 @@ class Solver:
         # Resources can only be used after their release time.
         for train_idx, train in enumerate(self.trains):
             for op_idx, operation in enumerate(train):
-                for resource in operation.resources:
-                    release_time = resource.release__time
-                    for slot in range(release_time):
-                        self.model.add(
-                            self.vars[slot][train_idx][op_idx] == 0)
+                if len(operation.resources) == 0:
+                    continue
+                print(operation.resources)
+                assert (len(operation.resources) == 1)
+                self.model.add(sum(self.vars[slot][train_idx][op_idx] for slot in range(
+                    self.timeslots)) >= operation.resources[0].release__time)
 
     def constraint_resource_release2(self):
-
         ops_per_res = []
         for i, ressource in enumerate(self.resources()):
             ops_per_res_i = []
@@ -240,7 +240,7 @@ class Solver:
                 for index_train, train in enumerate(self.vars[slot]):
                     for index_op, _ in enumerate(train):
                         for res_train in self.trains[index_train][index_op].resources:
-                            if res == res_train.name:
+                            if res == res_train:
                                 summ += self.vars[slot][index_train][index_op]
                 self.model.add(summ <= 1)
 
@@ -302,7 +302,7 @@ class Solver:
         # self.constraint_successor()
 
         # compiliert jetzt, tut aber nicht, was es soll
-        # self.constraint_resource_release()
+        self.constraint_resource_release()
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()

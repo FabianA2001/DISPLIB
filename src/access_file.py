@@ -11,6 +11,11 @@ class Resource:
         return self.name + " " + str(self.release__time)
         return self.name
 
+    def __eq__(self, other):
+        if not isinstance(other, Resource):
+            return NotImplemented
+        return (self.name == other.name)
+
 
 class Operation:
     def __init__(self, min_dur: int = -1, low_bound: int = -1, upper_bound: int = -1, res: list[Resource] = [], successors: list[int] = [], threshold: int = 0, coeff: int = 0, increment: int = 0) -> None:
