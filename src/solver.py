@@ -302,7 +302,7 @@ class Solver:
         # self.constraint_successor()
 
         # compiliert jetzt, tut aber nicht, was es soll
-        self.constraint_resource_release()
+        # self.constraint_resource_release()
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()
