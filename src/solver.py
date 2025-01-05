@@ -311,6 +311,7 @@ class Solver:
         status = self.solver.solve(self.model)
         print("Status:", status)
         assert (status == 4)
+        print("Orginal objective_value", self.solver.ObjectiveValue())
 
         # vorläufig deaktiviert da cycles aktuell keine Probleme darstellen
         # cycles = self.find_resource_cycles(self.solver)

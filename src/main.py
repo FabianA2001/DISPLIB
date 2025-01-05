@@ -45,4 +45,4 @@ if __name__ == "__main__":
     sol = solver.Solver(trains, clac_maxtime(trains)*2, graphes)
     # sol.print()
     sol.solve()
-    sol.print(True)
+    # sol.print(True)
