@@ -278,7 +278,7 @@ class Solver:
     def constraint_start_lower_bound(self):
         for index_train, train in enumerate(self.trains):
             for index_operation, operatin in enumerate(train):
-                if operatin.upper_bound != -1:
+                if operatin.lower_bound != -1:
                     summ = 0
                     for i in range(0, operatin.lower_bound,):
                         summ += self.vars[i][index_train][index_operation]
