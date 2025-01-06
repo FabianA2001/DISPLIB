@@ -5,6 +5,7 @@ import solver
 
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 
 
 def print_operations(trains):
@@ -24,9 +25,8 @@ def clac_maxtime(trains):
 
 
 if __name__ == "__main__":
-
-    # path = "displib_instances_testing/line1_critical_0.json"
-    path = "displib_instances_testing/displib_testinstances_headway1.json"
+    path = sys.argv[1]
+    print(path)
     trains: list[list[Operation]] = access_file.get_operations(path)
     # print_operations(trains)
 
