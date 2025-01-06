@@ -96,9 +96,9 @@ class Solver:
     def constraint_always_there(self):
         # At every timeslot, every train has to be in exactly one operation
         for train in range(len(self.trains)):
-            for slot in range(0, self.timeslots):
+            for slot in range(1, self.timeslots):
                 self.model.add(sum(self.vars[slot][train][op]
-                               for op, _ in enumerate(self.trains[train])) == 1)
+                               for op, _ in enumerate(self.trains[train])) <= 1)
 
         # in 0 slot there can be the start and an other operation
         # messes up the solution
@@ -134,7 +134,8 @@ class Solver:
         # The end has to be the last operation
         for train in range(len(self.trains)):
             last_op = len(self.trains[train]) - 1
-            self.model.add(self.vars[self.timeslots - 1][train][last_op] == 1)
+            self.model.add(sum(self.vars[slot][train][last_op]
+                           for slot in range(self.timeslots)) >= 1)
 
     def constraint_resource_release(self):
         # Resources can only be used after their release time.
