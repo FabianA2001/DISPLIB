@@ -40,6 +40,8 @@ class Solver:
         #                         op.increment*self.big_H(t, op.threshold))*var
         # self.model.minimize(opdelay)
 
+        # eine int varibale erstellen welche nach allen bool variabeln aus der vorigen op waren
+
         #################################
         # WRONG
         ################################
@@ -355,4 +357,5 @@ class Solver:
 
             cycles = self.find_resource_cycles(self.solver)
 
-        save_result(self.solver, self.vars, self.max_operations(), self.trains, self.resources())
+        save_result(self.solver, self.vars, self.max_operations(),
+                    self.trains, self.resources())
