@@ -1,4 +1,5 @@
 import json
+import networkx as nx
 from typing import Dict
 
 
@@ -86,9 +87,11 @@ def big_H(a, b):
         return 1
 
 
-def save_result(solver, vars, max_operatins: list, trainss):
+def save_result(solver, vars, max_operatins: list, trainss, resources: list):
     events = []
     opdelay = 0
+    resource_graphes = timeslot_resource_graphes(solver, vars, trainss, resources)
+    used_timeslots = []
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
@@ -102,9 +105,19 @@ def save_result(solver, vars, max_operatins: list, trainss):
                                         op.increment*big_H(time_index, op.threshold))
                             event = {"time": time_index, "train": train_index,
                                      "operation": operation_index}
+                            if time_index != 0 and time_index not in used_timeslots:
+                                used_timeslots.append(time_index)
                             events.append(event)
                         if max_operatins[train_index] == operation_index:
                             max_operatins[train_index] = 0
+    for time in used_timeslots:
+        graph = resource_graphes[time-1]
+        time_events = [event for event in events if event["time"] == time]
+        print(time)
+        for event in time_events:
+            print(event)
+        if len(time_events) > 1:
+            events = sort_events(events, time_events, graph)
     data = {
         "objective_value": opdelay,
         "events": events
@@ -112,3 +125,64 @@ def save_result(solver, vars, max_operatins: list, trainss):
     # JSON-Datei erstellen
     with open('solution.json', 'w') as json_file:
         json.dump(data, json_file, indent=4)
+
+
+def timeslot_resource_graphes(solver, vars, trains, resources: list):
+    slot_graphes = []
+    resource_names = []
+    for resource in resources:
+        resource_names.append(resource.name)
+    for slot in range(len(vars)-1):
+        slot_graphes.append(nx.DiGraph())
+        slot_graphes[slot].add_nodes_from(resource_names)
+        for train in range(len(trains)):
+            resources_now = []
+            resources_next = []
+            op_now = 0
+            op_next = 0
+            for operation in range(len(trains[train])):
+                if solver.value(vars[slot][train][operation]) == 1:
+                    resources_now += trains[train][operation].resources
+                    op_now = operation
+                if solver.value(vars[slot+1][train][operation]) == 1:
+                    resources_next += trains[train][operation].resources
+                    op_next = operation
+            for now in resources_now:
+                for next in resources_next:
+                    if now != next:
+                        slot_graphes[slot].add_edge(now.name, next.name, x=(
+                            train, op_now, op_next))
+        if len(list(nx.simple_cycles(slot_graphes[slot]))) > 0:
+            raise Exception("Please activate cycle constraints")
+    return slot_graphes
+
+
+def sort_events(events, time_events, graph):
+    before = []
+    after = []
+    flag_after = False
+    sorted_time_events = []
+    for event in events:
+        if event not in time_events and flag_after == False:
+            before.append(event)
+        elif event not in time_events and flag_after == True:
+            after.append(event)
+        else:
+            flag_after = True
+
+    while graph.edges:
+        path = nx.dag_longest_path(graph)
+        edges = []
+        for start in range(len(path)-1):
+            edge = graph.edges(path[start][path[start+1]])
+            edge_x = edge.data("x")
+            edges.append(edge)
+            sorted_time_events += [event for event in time_events if event["train"] == edge_x[0]
+                                   and event["operation"] == edge_x[2]]
+        graph.remove_edges_from(edges)
+    for event in time_events:
+        if event not in sorted_time_events:
+            sorted_time_events.append(event)
+
+
+    return before + sorted_time_events + after

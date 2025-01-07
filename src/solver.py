@@ -61,7 +61,10 @@ class Solver:
 
     def find_resource_cycles(self, solver):
         graph = nx.DiGraph()
-        graph.add_nodes_from(self.resources())
+        resource_names = []
+        for resource in self.resources():
+            resource_names.append(resource.name)
+        graph.add_nodes_from(resource_names)
         slot_cycles = []
         for slot in range(self.timeslots-1):
             graph.clear_edges()
@@ -80,7 +83,7 @@ class Solver:
                 for now in resources_now:
                     for next in resources_next:
                         if now != next:
-                            graph.add_edge(now, next, x=(
+                            graph.add_edge(now.name, next.name, x=(
                                 train, op_now, op_next))
             cycles = nx.simple_cycles(graph)
             for cycle in cycles:
@@ -342,14 +345,14 @@ class Solver:
         print("Orginal objective_value", self.solver.ObjectiveValue())
 
         # vorläufig deaktiviert da cycles aktuell keine Probleme darstellen
-        # cycles = self.find_resource_cycles(self.solver)
-        # while (len(cycles) > 0):
-        #     for cycle in cycles:
-        #         self.constraint_destroy_cycle(cycle)
-        #     status = self.solver.solve(self.model)
-        #     print("Status:", status)
-        #     assert (status == 4)
+        cycles = self.find_resource_cycles(self.solver)
+        while (len(cycles) > 0):
+            for cycle in cycles:
+                self.constraint_destroy_cycle(cycle)
+            status = self.solver.solve(self.model)
+            print("Status:", status)
+            assert (status == 4)
 
-        #     cycles = self.find_resource_cycles(self.solver)
+            cycles = self.find_resource_cycles(self.solver)
 
-        save_result(self.solver, self.vars, self.max_operations(), self.trains)
+        save_result(self.solver, self.vars, self.max_operations(), self.trains, self.resources())
