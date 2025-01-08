@@ -125,7 +125,7 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
         print(time)
         for event in time_events:
             print(event)
-        if len(time_events) > 1 and time>1:
+        if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
             print("-")
             for event in time_events:
@@ -189,6 +189,7 @@ def sort_events(events, time_events, graph):
     after = []
     flag_after = False
     sorted_time_events = []
+    time_events = [e for e in time_events if e["operation"] != 0]
     for event in events:
         if (event not in time_events and flag_after == False) or event["operation"] == 0:
             before.append(event)
