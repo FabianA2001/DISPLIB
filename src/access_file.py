@@ -122,14 +122,14 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
     for time in used_timeslots:
         graph = resource_graphes[time-1]
         time_events = [event for event in events if event["time"] == time-1]
-        print(time)
-        for event in time_events:
-            print(event)
+        # print(time)
+        # for event in time_events:
+        #     print(event)
         if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
-            print("-")
-            for event in time_events:
-                print(event)
+            # print("-")
+            # for event in time_events:
+            #     print(event)
     data = {
         "objective_value": opdelay,
         "events": events
@@ -183,7 +183,7 @@ def sort_events(events, time_events, graph):
     nx.draw(graph, pos, with_labels=True, node_color='skyblue',
             node_size=300, font_size=9, font_weight='bold')
     edge_labels = nx.get_edge_attributes(graph, "x")
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels = edge_labels)
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
     plt.savefig("graphen/resourcen.png")
     before = []
     after = []

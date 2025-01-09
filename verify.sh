@@ -3,8 +3,8 @@
 # INSTANCES=displib_instances_testing/displib_testinstances_headway1.json
 # INSTANCES=displib_instances_testing/displib_testinstances_infeasible1.json
 # INSTANCES=displib_instances_testing/displib_testinstances_infeasible2.json
-INSTANCES=displib_instances_testing/displib_testinstances_swapping1.json
-# INSTANCES=displib_instances_testing/displib_testinstances_swapping2.json
+# INSTANCES=displib_instances_testing/displib_testinstances_swapping1.json
+INSTANCES=displib_instances_testing/displib_testinstances_swapping2.json
 
 clear
 echo -------------------------------------------------------------------

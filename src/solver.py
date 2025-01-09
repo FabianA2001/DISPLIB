@@ -180,7 +180,7 @@ class Solver:
                         if res.name == ressource:
                             ops_per_res_i.append((trainid, opid))
             ops_per_res.append(ops_per_res_i)
-        print(ops_per_res)
+        # print(ops_per_res)
 
         for timeid, slot in enumerate(self.vars):
             for trainid, train in enumerate(self.trains):
