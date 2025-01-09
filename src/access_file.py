@@ -121,15 +121,15 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
                             max_operatins[train_index] = 0
     for time in used_timeslots:
         graph = resource_graphes[time-1]
-        time_events = [event for event in events if event["time"] == time]
+        time_events = [event for event in events if event["time"] == time-1]
         # print(time)
         # for event in time_events:
-        # print(event)
+        #     print(event)
         if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
-            print("-")
-            for event in time_events:
-                print(event)
+            # print("-")
+            # for event in time_events:
+            #     print(event)
     data = {
         "objective_value": opdelay,
         "events": events
