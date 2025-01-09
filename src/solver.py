@@ -180,7 +180,7 @@ class Solver:
                         if res.name == ressource:
                             ops_per_res_i.append((trainid, opid))
             ops_per_res.append(ops_per_res_i)
-        print(ops_per_res)
+        # print(ops_per_res)
 
         for timeid, slot in enumerate(self.vars):
             for trainid, train in enumerate(self.trains):
@@ -315,7 +315,7 @@ class Solver:
     def solve(self):
         self.solver = cp_model.CpSolver()
         # ohne dieses Zeile ist es nicht Determinstisch
-        self.solver.parameters.num_search_workers = 1
+        # self.solver.parameters.num_search_workers = 1
         self.setObjective()
 
         self.constraint_start_at_start()

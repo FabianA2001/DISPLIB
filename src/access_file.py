@@ -90,7 +90,8 @@ def big_H(a, b):
 def save_result(solver, vars, max_operatins: list, trainss, resources: list):
     events = []
     opdelay = 0
-    resource_graphes = timeslot_resource_graphes(solver, vars, trainss, resources)
+    resource_graphes = timeslot_resource_graphes(
+        solver, vars, trainss, resources)
     used_timeslots = []
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
@@ -113,9 +114,9 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
     for time in used_timeslots:
         graph = resource_graphes[time-1]
         time_events = [event for event in events if event["time"] == time]
-        print(time)
-        for event in time_events:
-            print(event)
+        # print(time)
+        # for event in time_events:
+        # print(event)
         if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
     data = {
@@ -183,6 +184,5 @@ def sort_events(events, time_events, graph):
     for event in time_events:
         if event not in sorted_time_events:
             sorted_time_events.append(event)
-
 
     return before + sorted_time_events + after
