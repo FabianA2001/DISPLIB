@@ -12,6 +12,7 @@ class Solver:
         self.model = cp_model.CpModel()
         self.FACTOR = 5
         self.timeslots = timeslots//self.FACTOR
+        print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
 
         # vars sind : list[list[list[bool]]]
@@ -327,6 +328,7 @@ class Solver:
         self.solver = cp_model.CpSolver()
         # ohne dieses Zeile ist es nicht Determinstisch
         # self.solver.parameters.num_search_workers = 1
+        self.solver.parameters.log_search_progress = True
         self.print_time("objective")
         self.setObjective()
         self.print_time("start")
@@ -347,16 +349,16 @@ class Solver:
         # in deren der Lösung (displib_solution_testinstances_headway1) ist
         # Zug 0 im 0 zeitslot in operation 0 und 1
         # aber ohne geht es garnicht mehr
-        print("always there")
+        self.print_time("always there")
         self.constraint_always_there()
 
         # warscheinlich unnötig
         # self.constraint_successor()
 
         # compiliert jetzt, tut aber nicht, was es soll
-        print("release")
+        self.print_time("release")
         self.constraint_resource_release()
-        print("end constraints")
+        self.print_time("end constraints")
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()
@@ -377,6 +379,6 @@ class Solver:
             assert (status == 4)
 
             cycles = self.find_resource_cycles(self.solver)
-
+        self.print_time("save")
         save_result(self.solver, self.vars, self.max_operations(),
                     self.trains, self.resources(), self.FACTOR)
