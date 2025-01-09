@@ -2,6 +2,7 @@ from access_file import Operation
 from ortools.sat.python import cp_model
 from access_file import save_result
 import networkx as nx
+import time
 
 
 class Solver:
@@ -10,6 +11,7 @@ class Solver:
         self.graphes = graphes
         self.model = cp_model.CpModel()
         self.timeslots = timeslots
+        self.start_time = 0.0
 
         # vars sind : list[list[list[bool]]]
         #             time  train operation
@@ -24,6 +26,12 @@ class Solver:
                         f"train{i}:op{op} ({time})"))
                 slot.append(train_slot)
             self.vars.append(slot)
+
+    def print_time(self, name):
+        if self.start_time != 0.0:
+            elapsed_time = int(time.time() - self.start_time)
+            # Print the elapsed time
+            print(f"{name} start: {int(elapsed_time/60)}m {elapsed_time % 60}s")
 
     def big_H(self, a, b):
         if (a <= b):
@@ -313,25 +321,25 @@ class Solver:
         return max_op
 
     def solve(self):
-        print("begin model")
+        self.print_time("begin model")
         self.solver = cp_model.CpSolver()
         # ohne dieses Zeile ist es nicht Determinstisch
         # self.solver.parameters.num_search_workers = 1
-        print("objective")
+        self.print_time("objective")
         self.setObjective()
-        print("start")
+        self.print_time("start")
         self.constraint_start_at_start()
-        print("length")
+        self.print_time("length")
         self.constraint_operation_length()
-        print("end")
+        self.print_time("end")
         self.constraint_end_at_last_op()
-        print("consecutive")
+        self.print_time("consecutive")
         self.constraint_consecutive()
-        print("resource")
+        self.print_time("resource")
         self.constraint_resource()
-        print("upper")
+        self.print_time("upper")
         self.constraint_start_upper_bound()
-        print("lower")
+        self.print_time("lower")
         self.constraint_start_lower_bound()
 
         # in deren der Lösung (displib_solution_testinstances_headway1) ist

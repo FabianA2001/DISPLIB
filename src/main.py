@@ -7,6 +7,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 
+import time
+# Record the start time
+start_time = time.time()
+
 
 def print_operations(trains):
     for i, train in enumerate(trains):
@@ -43,6 +47,7 @@ if __name__ == "__main__":
         plt.savefig(f"graphen/train{i}.png")
 
     sol = solver.Solver(trains, clac_maxtime(trains)*3, graphes)
+    sol.start_time = start_time
     # sol.print()
     sol.solve()
     # sol.print(True)
