@@ -20,12 +20,16 @@ def print_operations(trains):
 
 
 def clac_maxtime(trains):
-    max = 0
+    maxx = 0
     for train in trains:
-        summ = sum(op.minimal_duration for op in train)
-        if max < summ:
-            max = summ
-    return max
+        summ = 0
+        for op in train:
+            ress = 0
+            if len(op.resources) >= 1:
+                ress = max([res.release__time for res in op.resources])
+            summ += max(op.minimal_duration, ress)
+        maxx = max(summ, maxx)
+    return maxx
 
 
 if __name__ == "__main__":
@@ -46,7 +50,7 @@ if __name__ == "__main__":
                 node_size=300, font_size=9, font_weight='bold')
         plt.savefig(f"graphen/train{i}.png")
 
-    sol = solver.Solver(trains, clac_maxtime(trains)*3, graphes)
+    sol = solver.Solver(trains, int(clac_maxtime(trains)*1.5), graphes)
     sol.start_time = start_time
     # sol.print()
     sol.solve()
