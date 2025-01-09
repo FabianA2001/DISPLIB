@@ -1,10 +1,10 @@
 #!/bin/bash
 # wichtig keine leerzeichen
 # INSTANCES=displib_instances_testing/displib_testinstances_headway1.json
-# INSTANCES=displib_instances_testing/displib_testinstances_infeasible1.json
-# INSTANCES=displib_instances_testing/displib_testinstances_infeasible2.json
 # INSTANCES=displib_instances_testing/displib_testinstances_swapping1.json
-INSTANCES=displib_instances_testing/displib_testinstances_swapping2.json
+# INSTANCES=displib_instances_testing/displib_testinstances_swapping2.json
+INSTANCES=displib_instances_phase1/line2_close_4.json
+# INSTANCES=
 
 clear
 echo -------------------------------------------------------------------
