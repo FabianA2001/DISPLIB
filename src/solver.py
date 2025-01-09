@@ -10,14 +10,16 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.timeslots = timeslots
+        self.FACTOR = 5
+        self.timeslots = timeslots//self.FACTOR
         self.start_time = 0.0
 
         # vars sind : list[list[list[bool]]]
         #             time  train operation
         #             immer der Index
         self.vars = []
-        for time in range(timeslots):
+
+        for time in range(timeslots//self.FACTOR):
             slot = []
             for i, train in enumerate(trains):
                 train_slot = []
@@ -57,7 +59,7 @@ class Solver:
         for t, timeslot in enumerate(self.vars):
             for train, time in zip(self.trains, timeslot):
                 for op, var in zip(train, time):
-                    opdelay += t*var
+                    opdelay += t*self.FACTOR*var
         self.model.minimize(opdelay)
 
     def resources(self):
@@ -133,7 +135,7 @@ class Solver:
                 con1 = sum(self.vars[slot][train][op]
                            for slot in range(self.timeslots)) == 0
                 con2 = sum(self.vars[slot][train][op] for slot in range(
-                    self.timeslots)) >= self.trains[train][op].minimal_duration
+                    self.timeslots)) >= self.trains[train][op].minimal_duration//self.FACTOR
 
                 # Define boolean variables
                 condition1 = self.model.NewBoolVar('condition1')
@@ -169,7 +171,7 @@ class Solver:
                     if release_time > 0:
                         is_active = self.vars[time_id][train_idx][op_idx]
 
-                        for t in range(1, release_time + 1):
+                        for t in range(1, (release_time//self.FACTOR)+1 + 1):
                             if time_id + t < self.timeslots:
                                 for other_train_idx, other_op_idx, _ in operations:
                                     if (other_train_idx, other_op_idx) != (train_idx, op_idx):
@@ -284,7 +286,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
                     summ = self.vars[0][index_train][index_operation]
-                    for i in range(0, operatin.upper_bound,):
+                    for i in range(0, operatin.upper_bound//self.FACTOR,):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ >= 1)
@@ -294,7 +296,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.lower_bound != -1:
                     summ = 0
-                    for i in range(0, operatin.lower_bound,):
+                    for i in range(0, operatin.lower_bound//self.FACTOR,):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ == 0)
@@ -377,4 +379,4 @@ class Solver:
             cycles = self.find_resource_cycles(self.solver)
 
         save_result(self.solver, self.vars, self.max_operations(),
-                    self.trains, self.resources())
+                    self.trains, self.resources(), self.FACTOR)

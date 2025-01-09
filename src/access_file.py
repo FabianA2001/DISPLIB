@@ -88,7 +88,7 @@ def big_H(a, b):
         return 1
 
 
-def save_result(solver, vars, max_operatins: list, trainss, resources: list):
+def save_result(solver, vars, max_operatins: list, trainss, resources: list, FACTOR):
     events = []
     opdelay = 0
     resource_graphes = timeslot_resource_graphes(
@@ -101,7 +101,7 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
 
                     op = trainss[train_index][operation_index]
                     if time_index == 0:
-                        opdelay += (op.coeff*max(0, time_index-op.threshold) +
+                        opdelay += (op.coeff*max(0, (time_index*FACTOR)-op.threshold) +
                                     op.increment*big_H(time_index, op.threshold))
                         event = {"time": time_index, "train": train_index,
                                  "operation": operation_index}
@@ -109,9 +109,9 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
 
                     elif not solver.Value(vars[time_index-1][train_index][operation_index]):
                         if max_operatins[train_index] >= operation_index:
-                            opdelay += (op.coeff*max(0, time_index-1-op.threshold) +
-                                        op.increment*big_H(time_index-1, op.threshold))
-                            event = {"time": time_index-1, "train": train_index,
+                            opdelay += (op.coeff*max(0, ((time_index-1)*FACTOR)-op.threshold) +
+                                        op.increment*big_H((time_index-1)*FACTOR, op.threshold))
+                            event = {"time": ((time_index-1)*FACTOR), "train": train_index,
                                      "operation": operation_index}
                             if time_index != 0 and time_index not in used_timeslots:
                                 used_timeslots.append(time_index)
