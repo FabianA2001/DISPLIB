@@ -1,5 +1,6 @@
 import json
 import networkx as nx
+import matplotlib.pyplot as plt
 from typing import Dict
 
 
@@ -99,15 +100,22 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
                 if solver.Value(operation):
 
                     op = trainss[train_index][operation_index]
+                    if time_index == 0:
+                        opdelay += (op.coeff*max(0, time_index-op.threshold) +
+                                    op.increment*big_H(time_index, op.threshold))
+                        event = {"time": time_index, "train": train_index,
+                                 "operation": operation_index}
+                        events.append(event)
 
-                    if time_index == 0 or not solver.Value(vars[time_index-1][train_index][operation_index]):
+                    elif not solver.Value(vars[time_index-1][train_index][operation_index]):
                         if max_operatins[train_index] >= operation_index:
-                            opdelay += (op.coeff*max(0, time_index-op.threshold) +
-                                        op.increment*big_H(time_index, op.threshold))
-                            event = {"time": time_index, "train": train_index,
+                            opdelay += (op.coeff*max(0, time_index-1-op.threshold) +
+                                        op.increment*big_H(time_index-1, op.threshold))
+                            event = {"time": time_index-1, "train": train_index,
                                      "operation": operation_index}
                             if time_index != 0 and time_index not in used_timeslots:
                                 used_timeslots.append(time_index)
+
                             events.append(event)
                         if max_operatins[train_index] == operation_index:
                             max_operatins[train_index] = 0
@@ -119,6 +127,9 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
         # print(event)
         if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
+            print("-")
+            for event in time_events:
+                print(event)
     data = {
         "objective_value": opdelay,
         "events": events
@@ -131,11 +142,13 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list):
 def timeslot_resource_graphes(solver, vars, trains, resources: list):
     slot_graphes = []
     resource_names = []
+    nothing = Resource("nothing")
     for resource in resources:
         resource_names.append(resource.name)
     for slot in range(len(vars)-1):
         slot_graphes.append(nx.DiGraph())
         slot_graphes[slot].add_nodes_from(resource_names)
+        slot_graphes[slot].add_node("nothing")
         for train in range(len(trains)):
             resources_now = []
             resources_next = []
@@ -148,10 +161,16 @@ def timeslot_resource_graphes(solver, vars, trains, resources: list):
                 if solver.value(vars[slot+1][train][operation]) == 1:
                     resources_next += trains[train][operation].resources
                     op_next = operation
+            if resources_now == []:
+                nothing = Resource("nothing" + str(train))
+                resources_now = [nothing]
             for now in resources_now:
+                if resources_next == []:
+                    nothing = Resource("nothing" + str(train))
+                    resources_next = [nothing]
                 for next in resources_next:
                     if now != next:
-                        slot_graphes[slot].add_edge(now.name, next.name, x=(
+                        slot_graphes[slot].add_edge(next.name, now.name, x=(
                             train, op_now, op_next))
         if len(list(nx.simple_cycles(slot_graphes[slot]))) > 0:
             raise Exception("Please activate cycle constraints")
@@ -159,12 +178,20 @@ def timeslot_resource_graphes(solver, vars, trains, resources: list):
 
 
 def sort_events(events, time_events, graph):
+    plt.clf()
+    pos = nx.spring_layout(graph)
+    nx.draw(graph, pos, with_labels=True, node_color='skyblue',
+            node_size=300, font_size=9, font_weight='bold')
+    edge_labels = nx.get_edge_attributes(graph, "x")
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
+    plt.savefig("graphen/resourcen.png")
     before = []
     after = []
     flag_after = False
     sorted_time_events = []
+    time_events = [e for e in time_events if e["operation"] != 0]
     for event in events:
-        if event not in time_events and flag_after == False:
+        if (event not in time_events and flag_after == False) or event["operation"] == 0:
             before.append(event)
         elif event not in time_events and flag_after == True:
             after.append(event)
@@ -173,14 +200,11 @@ def sort_events(events, time_events, graph):
 
     while graph.edges:
         path = nx.dag_longest_path(graph)
-        edges = []
         for start in range(len(path)-1):
-            edge = graph.edges(path[start][path[start+1]])
-            edge_x = edge.data("x")
-            edges.append(edge)
-            sorted_time_events += [event for event in time_events if event["train"] == edge_x[0]
-                                   and event["operation"] == edge_x[2]]
-        graph.remove_edges_from(edges)
+            edge_x = graph[path[start]][path[start+1]]
+            sorted_time_events += [event for event in time_events if event["train"] == edge_x["x"][0]
+                                   and event["operation"] == edge_x["x"][2]]
+            graph.remove_edge(path[start], path[start+1])
     for event in time_events:
         if event not in sorted_time_events:
             sorted_time_events.append(event)

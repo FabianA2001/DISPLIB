@@ -101,7 +101,7 @@ class Solver:
     def constraint_always_there(self):
         # At every timeslot, every train has to be in exactly one operation
         for train in range(len(self.trains)):
-            for slot in range(1, self.timeslots):
+            for slot in range(0, self.timeslots):
                 self.model.add(sum(self.vars[slot][train][op]
                                for op, _ in enumerate(self.trains[train])) <= 1)
 
