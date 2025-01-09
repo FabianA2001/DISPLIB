@@ -313,29 +313,40 @@ class Solver:
         return max_op
 
     def solve(self):
+        print("begin model")
         self.solver = cp_model.CpSolver()
         # ohne dieses Zeile ist es nicht Determinstisch
-        self.solver.parameters.num_search_workers = 1
+        # self.solver.parameters.num_search_workers = 1
+        print("objective")
         self.setObjective()
-
+        print("start")
         self.constraint_start_at_start()
+        print("length")
         self.constraint_operation_length()
+        print("end")
         self.constraint_end_at_last_op()
+        print("consecutive")
         self.constraint_consecutive()
+        print("resource")
         self.constraint_resource()
+        print("upper")
         self.constraint_start_upper_bound()
+        print("lower")
         self.constraint_start_lower_bound()
 
         # in deren der Lösung (displib_solution_testinstances_headway1) ist
         # Zug 0 im 0 zeitslot in operation 0 und 1
         # aber ohne geht es garnicht mehr
+        print("always there")
         self.constraint_always_there()
 
         # warscheinlich unnötig
         # self.constraint_successor()
 
         # compiliert jetzt, tut aber nicht, was es soll
+        print("release")
         self.constraint_resource_release()
+        print("end constraints")
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()
