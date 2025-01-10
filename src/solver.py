@@ -12,7 +12,7 @@ class Solver:
         self.graphes = graphes
         self.model = cp_model.CpModel()
         self.FACTOR = 1
-        self.timeslots = timeslots//self.FACTOR
+        self.timeslots = int((timeslots/self.FACTOR)*1.5)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
 
@@ -21,7 +21,7 @@ class Solver:
         #             immer der Index
         self.vars = []
 
-        for time in range(timeslots//self.FACTOR):
+        for time in range(self.timeslots//self.FACTOR):
             slot = []
             for i, train in enumerate(trains):
                 train_slot = []

@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 node_size=300, font_size=9, font_weight='bold')
         plt.savefig(f"graphen/train{i}.png")
 
-    sol = solver.Solver(trains, int(clac_maxtime(trains)*2), graphes)
+    sol = solver.Solver(trains, clac_maxtime(trains), graphes)
     sol.start_time = start_time
     # sol.print()
     sol.solve()
