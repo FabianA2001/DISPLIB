@@ -8,9 +8,10 @@ import time
 class Solver:
     def __init__(self, trains, timeslots, graphes, important_trains, times_trains) -> None:
         self.trains: list[list[Operation]] = trains
-        print(trains)
+        print(trains[3])
         print("WWWWWWWW")
-        print(important_trains)
+        for traain in important_trains:
+            print(traain)
         self.important_trains = important_trains
         self.trains = self.important_trains
         self.graphes = graphes
@@ -29,7 +30,7 @@ class Solver:
         print(timeslots)
         for time in range(timeslots):
             slot = []
-            for i, train in enumerate(trains):
+            for i, train in enumerate(self.trains):
                 # f time > timeslots[i]:
                 # print(timeslot)
                 # break
@@ -74,7 +75,8 @@ class Solver:
         for t, timeslot in enumerate(self.vars):
             for train, time in zip(self.trains, timeslot):
                 for op, var in zip(train, time):
-                    opdelay += t*self.FACTOR*var
+                    opdelay += (op.coeff*max(0, (t*self.FACTOR)-op.threshold) +
+                                op.increment*self.big_H(t*self.FACTOR, op.threshold))*var
         self.model.minimize(opdelay)
 
     def resources(self):
@@ -312,6 +314,9 @@ class Solver:
                 if operatin.lower_bound != -1:
                     summ = 0
                     for i in range(0, operatin.lower_bound//self.FACTOR,):
+                        if i >= self.timeslots:
+                            break
+
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ == 0)

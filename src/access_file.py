@@ -52,6 +52,9 @@ def get_operations(path: str) -> list[list[Operation]]:
                 key = "start_ub"
                 if key in operation:
                     op.upper_bound = operation[key]
+                key = "start_lb"
+                if key in operation:
+                    op.lower_bound = operation[key]
                 key = "min_duration"
                 if key in operation:
                     op.minimal_duration = operation[key]

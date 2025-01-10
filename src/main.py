@@ -32,6 +32,57 @@ def clac_maxtime(trains):
     return maxx
 
 
+def calc_train_length(trains, maxx, FACTOR):
+    short_trains = []
+    for train in trains:
+        train_part = []
+        summ = 0
+        for op in train:
+            ress = 0
+            if len(op.resources) >= 1:
+                ress = max([res.release__time for res in op.resources])
+            summ += max(op.minimal_duration, ress)
+            train_part.append(op)
+            if summ >= maxx/FACTOR:
+                short_trains.append(train_part)
+                break
+
+    return short_trains
+
+
+def calc_new_objective(trains: list[list[Operation]], timeslots):
+    train_list = []
+    for train in trains:
+        old_threshold = train[len(train)-1].threshold
+        old_coeff = train[len(train)-1].coeff
+        old_increment = train[len(train)-1].increment
+        summ = 0
+        pos = 0
+        for i, op in enumerate(reversed(train)):
+            summ += op.minimal_duration
+            if summ >= old_threshold-(old_threshold-timeslots):
+                pos = i-1
+                if old_threshold-timeslots <= 0:
+                    pos = 0
+                break
+        op_list = []
+        summ = 0
+        for j, op in enumerate(train):
+            summ += op.minimal_duration
+            if (summ > timeslots) or (op.lower_bound+op.minimal_duration > timeslots):
+                break
+            op_list.append(op)
+            if j > len(train)-pos:
+                break
+        if op_list != []:
+            op_list[len(op_list)-1].threshold = timeslots
+            op_list[len(op_list)-1].coeff = old_coeff
+            op_list[len(op_list)-1].increment = old_increment
+            train_list.append(op_list)
+
+    return train_list
+
+
 def clac_maxtime2(trains):
     maxx = 0
     time_per_train = []
@@ -85,8 +136,8 @@ if __name__ == "__main__":
                 node_size=300, font_size=9, font_weight='bold')
         plt.savefig(f"graphen/train{i}.png")
 
-    sol = solver.Solver(trains, int(clac_maxtime(
-        trains)*3), graphes, important_trains, clac_maxtime2(important_trains))
+    sol = solver.Solver(trains, 1500, graphes, calc_new_objective(
+        trains, 500), clac_maxtime2(important_trains))
     sol.start_time = start_time
     # sol.print()
     sol.solve()
