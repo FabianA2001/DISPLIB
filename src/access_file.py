@@ -106,8 +106,8 @@ def save_result(solver, vars, max_operatins: list, trainss, resources: list, FAC
                     op = trainss[train_index][operation_index]
                     if time_index == 0:
                         opdelay += (op.coeff*max(0, (time_index*FACTOR)-op.threshold) +
-                                    op.increment*big_H(time_index, op.threshold))
-                        event = {"time": time_index, "train": train_index,
+                                    op.increment*big_H(time_index*FACTOR, op.threshold))
+                        event = {"time": time_index*FACTOR, "train": train_index,
                                  "operation": operation_index}
                         events.append(event)
 

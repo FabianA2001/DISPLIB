@@ -196,34 +196,25 @@ class Solver:
 
         # checks slot 0
         # assumes op 0 is the start operation in every train
-        for train in range(len(self.trains)):
-            outcoming_edges = list(self.graphes[train].out_edges(0))
-            target_nodes = [edge[1] for edge in outcoming_edges]
-            target_nodes.append(0)
-            summ = 0
-            for op in range(len(self.trains[train])):
-                if op in target_nodes:
-                    continue
-                summ += self.vars[0][train][op]
-            self.model.add(summ == 0)
 
-    def constraint_successor(self):
-        # The order of the operations for one train has to be a path in the graph
-        for train in range(len(self.trains)):
-            for op, operation in enumerate(self.trains[train]):
-                for successor in operation.succesors:
-                    for slot in range(self.timeslots - 1):
-                        self.model.add(self.vars[slot][train][op] == 1).OnlyEnforceIf(
-                            self.vars[slot + 1][train][successor]
-                        )
+        # müsste inzwischen Egal sein weil wir wieder nur 1 op in jedem Zeitslot erlauben
+
+        # for train in range(len(self.trains)):
+        #     outcoming_edges = list(self.graphes[train].out_edges(0))
+        #     target_nodes = [edge[1] for edge in outcoming_edges]
+        #     target_nodes.append(0)
+        #     summ = 0
+        #     for op in range(len(self.trains[train])):
+        #         if op in target_nodes:
+        #             continue
+        #         summ += self.vars[0][train][op]
+        #     self.model.add(summ == 0)
 
     def constraint_resource(self):
         # A resource can only be used by one train at a time
         resources = self.resources()
         for slot in range(self.timeslots):
             for res in resources:
-                # self.model.add(sum(sum(self.vars[slot][train][op] for op in range(len(
-                #     self.trains[train])) if res in self.trains[train][op].resources) for train in range(len(self.trains))))
                 summ = 0
                 for index_train, train in enumerate(self.vars[slot]):
                     for index_op, _ in enumerate(train):
@@ -242,7 +233,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
                     summ = self.vars[0][index_train][index_operation]
-                    for i in range(0, operatin.upper_bound//self.FACTOR,):
+                    for i in range(0, math.ceil(operatin.upper_bound/self.FACTOR)):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ >= 1)
@@ -252,7 +243,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.lower_bound != -1:
                     summ = 0
-                    for i in range(0, operatin.lower_bound//self.FACTOR,):
+                    for i in range(0, math.ceil(operatin.lower_bound/self.FACTOR)):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ == 0)
@@ -301,22 +292,12 @@ class Solver:
         self.print_time("lower")
         self.constraint_start_lower_bound()
 
-        # in deren der Lösung (displib_solution_testinstances_headway1) ist
-        # Zug 0 im 0 zeitslot in operation 0 und 1
-        # aber ohne geht es garnicht mehr
         self.print_time("always there")
         self.constraint_always_there()
 
-        # warscheinlich unnötig
-        # self.constraint_successor()
-
-        # compiliert jetzt, tut aber nicht, was es soll
         self.print_time("release")
         self.constraint_resource_release()
         self.print_time("end constraints")
-
-        # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
-        # self.constraint_resource_release2()
 
         # 3 ist unmöglich, 4 ist optimal
         status = self.solver.solve(self.model)
