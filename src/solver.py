@@ -3,6 +3,7 @@ from ortools.sat.python import cp_model
 from access_file import save_result
 import networkx as nx
 import time
+import math
 
 
 class Solver:
@@ -10,7 +11,7 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.FACTOR = 5
+        self.FACTOR = 1
         self.timeslots = timeslots//self.FACTOR
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -136,7 +137,7 @@ class Solver:
                 con1 = sum(self.vars[slot][train][op]
                            for slot in range(self.timeslots)) == 0
                 con2 = sum(self.vars[slot][train][op] for slot in range(
-                    self.timeslots)) >= self.trains[train][op].minimal_duration//self.FACTOR
+                    self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.FACTOR)
 
                 # Define boolean variables
                 condition1 = self.model.NewBoolVar('condition1')
@@ -156,74 +157,28 @@ class Solver:
     def constraint_resource_release(self):
         # Resources can only be used after their release time.
         resources = self.resources()
-        ops_per_resource = {res.name: [] for res in resources}
+        ops_per_resource = {res: [] for res in resources}
 
         for train_idx, train in enumerate(self.trains):
             for op_idx, operation in enumerate(train):
                 for resource in operation.resources:
-                    ops_per_resource[resource.name].append(
+                    ops_per_resource[resource].append(
                         (train_idx, op_idx, operation))
 
         for time_id in range(self.timeslots):
-            for resource_name, operations in ops_per_resource.items():
+            for resource, operations in ops_per_resource.items():
                 for train_idx, op_idx, operation in operations:
-                    release_time = max(
-                        res.release__time for res in operation.resources if res.name == resource_name)
+                    release_time = resource.release__time
                     if release_time > 0:
                         is_active = self.vars[time_id][train_idx][op_idx]
 
-                        for t in range(1, (release_time//self.FACTOR)+1 + 1):
+                        for t in range(1, (math.ceil(release_time/self.FACTOR) + 1)):
                             if time_id + t < self.timeslots:
                                 for other_train_idx, other_op_idx, _ in operations:
                                     if (other_train_idx, other_op_idx) != (train_idx, op_idx):
                                         self.model.Add(
                                             self.vars[time_id + t][other_train_idx][other_op_idx] == 0).OnlyEnforceIf(
                                             is_active)
-
-    def constraint_resource_release2(self):
-        ops_per_res = []
-        for i, ressource in enumerate(self.resources()):
-            ops_per_res_i = []
-            for trainid, train in enumerate(self.trains):
-                for opid, operation in enumerate(train):
-
-                    for res in operation.resources:
-                        if res.name == ressource:
-                            ops_per_res_i.append((trainid, opid))
-            ops_per_res.append(ops_per_res_i)
-        # print(ops_per_res)
-
-        for timeid, slot in enumerate(self.vars):
-            for trainid, train in enumerate(self.trains):
-                for opid, op in enumerate(train):
-
-                    is_equal = self.model.NewBoolVar(
-                        f'is_equal_{timeid}_{trainid}_{opid}')
-                    self.model.Add(
-                        self.vars[timeid][trainid][opid] == 1).OnlyEnforceIf(is_equal)
-                    is_equal2 = self.model.NewBoolVar(
-                        f'is_equal2_{timeid}_{trainid}_{opid}')
-                    if timeid > 0:
-
-                        self.model.Add(
-                            self.vars[timeid-1][trainid][opid] == 0).OnlyEnforceIf(is_equal2)
-
-                    for res in op.resources:
-                        res_id = self.resources().index(res.name)
-
-                        for tuple in ops_per_res[res_id]:
-                            if tuple[1] != op:
-                                summ = sum(self.vars[i][trainid][opid]
-                                           for i in range(0, timeid))
-                                for t in range(res.release__time):
-                                    if timeid+t < len(self.vars):
-                                        print("hi")
-                                        is_equal3 = self.model.NewBoolVar(
-                                            f'is_equal3_{timeid+t}_{tuple[0]}_{tuple[1]}')
-                                        self.model.Add(
-                                            self.vars[timeid+t][tuple[0]][tuple[1]] == 0).OnlyEnforceIf(is_equal3)
-                                        self.model.add(is_equal3 <= is_equal)
-                                        self.model.add(is_equal3 <= is_equal2)
 
     def constraint_consecutive(self):
         # An operaton has to take place in consecutive timeslots
