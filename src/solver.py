@@ -316,5 +316,5 @@ class Solver:
 
             cycles = self.find_resource_cycles(self.solver)
         self.print_time("save")
-        save_result(self.solver, self.vars, self.max_operations(),
-                    self.trains, self.resources(), self.FACTOR)
+        save_result(self.solver, self.vars, self.trains,
+                    self.resources(), self.FACTOR)
