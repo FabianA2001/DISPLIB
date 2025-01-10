@@ -6,29 +6,43 @@ import time
 
 
 class Solver:
-    def __init__(self, trains, timeslots, graphes) -> None:
+    def __init__(self, trains, timeslots, graphes, important_trains, times_trains) -> None:
         self.trains: list[list[Operation]] = trains
+        print(trains)
+        print("WWWWWWWW")
+        print(important_trains)
+        self.important_trains = important_trains
+        self.trains = self.important_trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.FACTOR = 5
-        self.timeslots = timeslots//self.FACTOR
-        print(f"time slots: {self.timeslots}")
+        self.FACTOR = 1
+        self.timeslots = timeslots
+        self.timeslots_list = times_trains
+        # self.timeslots = timeslots//self.FACTOR
+        # print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
 
         # vars sind : list[list[list[bool]]]
         #             time  train operation
         #             immer der Index
         self.vars = []
-
-        for time in range(timeslots//self.FACTOR):
+        print(timeslots)
+        for time in range(timeslots):
             slot = []
             for i, train in enumerate(trains):
+                # f time > timeslots[i]:
+                # print(timeslot)
+                # break
                 train_slot = []
                 for op in range(len(train)):
                     train_slot.append(self.model.new_bool_var(
                         f"train{i}:op{op} ({time})"))
                 slot.append(train_slot)
             self.vars.append(slot)
+
+        # for i,train in enumerate(train):
+        #     for time in times_trains[i]:
+        #         for op in range(len(train)):
 
     def print_time(self, name):
         if self.start_time != 0.0:
