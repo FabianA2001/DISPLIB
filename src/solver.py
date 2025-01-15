@@ -11,8 +11,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 4  # int
-        self.MAX_FACTOR: float = 2  # float
+        self.SCALE_FACTOR: int = 3  # int
+        self.MAX_FACTOR: float = 3  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -136,7 +136,7 @@ class Solver:
         for train in range(len(self.trains)):
             for op in range(len(self.trains[train])):
                 con1 = sum(self.vars[slot][train][op]
-                           for slot in range(math.ceil(self.timeslots/self.SCALE_FACTOR))) == 0
+                           for slot in range(self.timeslots)) == 0
                 con2 = sum(self.vars[slot][train][op] for slot in range(
                     self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.SCALE_FACTOR)
 
