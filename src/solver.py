@@ -11,8 +11,9 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.FACTOR = 1
-        self.timeslots = int((timeslots/self.FACTOR)*1.5)
+        self.SCALE_FACTOR = 4
+        self.MAX_FACTOR = 2
+        self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
 
@@ -21,7 +22,7 @@ class Solver:
         #             immer der Index
         self.vars = []
 
-        for time in range(self.timeslots//self.FACTOR):
+        for time in range(self.timeslots):
             slot = []
             for i, train in enumerate(trains):
                 train_slot = []
@@ -61,7 +62,7 @@ class Solver:
         for t, timeslot in enumerate(self.vars):
             for train, time in zip(self.trains, timeslot):
                 for op, var in zip(train, time):
-                    opdelay += t*self.FACTOR*var
+                    opdelay += t*self.SCALE_FACTOR*var
         self.model.minimize(opdelay)
 
     def resources(self):
@@ -135,9 +136,9 @@ class Solver:
         for train in range(len(self.trains)):
             for op in range(len(self.trains[train])):
                 con1 = sum(self.vars[slot][train][op]
-                           for slot in range(self.timeslots)) == 0
+                           for slot in range(math.ceil(self.timeslots/self.SCALE_FACTOR))) == 0
                 con2 = sum(self.vars[slot][train][op] for slot in range(
-                    self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.FACTOR)
+                    self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.SCALE_FACTOR)
 
                 # Define boolean variables
                 condition1 = self.model.NewBoolVar('condition1')
@@ -172,7 +173,7 @@ class Solver:
                     if release_time > 0:
                         is_active = self.vars[time_id][train_idx][op_idx]
 
-                        for t in range(1, (math.ceil(release_time/self.FACTOR) + 1)):
+                        for t in range(1, (math.ceil(release_time/self.SCALE_FACTOR) + 1)):
                             if time_id + t < self.timeslots:
                                 for other_train_idx, other_op_idx, _ in operations:
                                     if (other_train_idx, other_op_idx) != (train_idx, op_idx):
@@ -233,7 +234,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.upper_bound != -1:
                     summ = self.vars[0][index_train][index_operation]
-                    for i in range(0, math.ceil(operatin.upper_bound/self.FACTOR)):
+                    for i in range(0, math.ceil(operatin.upper_bound/self.SCALE_FACTOR)):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ >= 1)
@@ -243,7 +244,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.lower_bound != -1:
                     summ = 0
-                    for i in range(0, math.ceil(operatin.lower_bound/self.FACTOR)):
+                    for i in range(0, math.ceil(operatin.lower_bound/self.SCALE_FACTOR)):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ == 0)
@@ -317,4 +318,4 @@ class Solver:
             cycles = self.find_resource_cycles(self.solver)
         self.print_time("save")
         save_result(self.solver, self.vars, self.trains,
-                    self.resources(), self.FACTOR)
+                    self.resources(), self.SCALE_FACTOR)
