@@ -11,8 +11,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR = 4
-        self.MAX_FACTOR = 2
+        self.SCALE_FACTOR: int = 4  # int
+        self.MAX_FACTOR: float = 2  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
