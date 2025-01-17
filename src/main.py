@@ -75,9 +75,12 @@ def calc_new_objective(trains: list[list[Operation]], timeslots):
             if j > len(train)-pos:
                 break
         if op_list != []:
-            op_list[len(op_list)-1].threshold = timeslots
+            if old_threshold > timeslots:
+                op_list[len(op_list)-1].threshold = timeslots
             op_list[len(op_list)-1].coeff = old_coeff
             op_list[len(op_list)-1].increment = old_increment
+            op_list[len(op_list)-1].succesors = []
+
             train_list.append(op_list)
 
     return train_list
@@ -101,7 +104,7 @@ def clac_maxtime2(trains):
 def get_important_trains(trains: list[list[Operation]]):
     important_trains = []
     for train in trains:
-        important_operations = []
+        important_operations: list[Operation] = []
         temp = []
         for op in train:
             temp.append(op)
@@ -109,6 +112,7 @@ def get_important_trains(trains: list[list[Operation]]):
                 for ops in temp:
                     important_operations.append(ops)
                 temp = []
+        # important_operations[len(important_operations)-1].succesors = []
         important_trains.append(important_operations)
 
     return important_trains

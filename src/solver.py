@@ -8,9 +8,10 @@ import time
 class Solver:
     def __init__(self, trains, timeslots, graphes, important_trains, times_trains) -> None:
         self.trains: list[list[Operation]] = trains
-        print(trains[3])
-        print("WWWWWWWW")
+        # print(trains[3])
+
         for traain in important_trains:
+            print("WWWWWWWW")
             print(traain)
         self.important_trains = important_trains
         self.trains = self.important_trains
