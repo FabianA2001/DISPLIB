@@ -95,8 +95,8 @@ def big_H(a, b):
 def save_result(solver, vars, trainss, resources: list, FACTOR):
     events = []
     opdelay = 0
-    resource_graphes = timeslot_resource_graphes(
-        solver, vars, trainss, resources)
+    #resource_graphes = timeslot_resource_graphes(
+        #solver, vars, trainss, resources)
     used_timeslots = []
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
@@ -121,16 +121,17 @@ def save_result(solver, vars, trainss, resources: list, FACTOR):
 
                         events.append(event)
     for time in used_timeslots:
-        graph = resource_graphes[time-1]
-        time_events = [event for event in events if event["time"] == time-1]
-        # print(time)
-        # for event in time_events:
-        #     print(event)
+        graph = timeslot_resource_graphes(solver, vars, time-1, trainss, resources)
+        time_events = [event for event in events if event["time"] == (time-1)*FACTOR]
+        #print("used_timeslot = ", time)
+        #print("(time-1) * FACTOR = ", (time-1)*FACTOR)
+        #for event in time_events:
+            #print(event)
         if len(time_events) > 1:
             events = sort_events(events, time_events, graph)
-            # print("-")
-            # for event in time_events:
-            #     print(event)
+            #print("-")
+            #for event in events:
+                #print(event)
     data = {
         "objective_value": opdelay,
         "events": events
@@ -140,42 +141,39 @@ def save_result(solver, vars, trainss, resources: list, FACTOR):
         json.dump(data, json_file, indent=4)
 
 
-def timeslot_resource_graphes(solver, vars, trains, resources: list):
-    slot_graphes = []
+def timeslot_resource_graphes(solver, vars, slot, trains, resources: list):
     resource_names = []
-    nothing = Resource("nothing")
     for resource in resources:
         resource_names.append(resource.name)
-    for slot in range(len(vars)-1):
-        slot_graphes.append(nx.DiGraph())
-        slot_graphes[slot].add_nodes_from(resource_names)
-        slot_graphes[slot].add_node("nothing")
-        for train in range(len(trains)):
-            resources_now = []
-            resources_next = []
-            op_now = 0
-            op_next = 0
-            for operation in range(len(trains[train])):
-                if solver.value(vars[slot][train][operation]) == 1:
-                    resources_now += trains[train][operation].resources
-                    op_now = operation
-                if solver.value(vars[slot+1][train][operation]) == 1:
-                    resources_next += trains[train][operation].resources
-                    op_next = operation
-            if resources_now == []:
+    graph = nx.DiGraph()
+    graph.add_nodes_from(resource_names)
+    graph.add_node("nothing")
+    for train in range(len(trains)):
+        resources_now = []
+        resources_next = []
+        op_now = 0
+        op_next = 0
+        for operation in range(len(trains[train])):
+            if solver.value(vars[slot][train][operation]) == 1:
+                resources_now += trains[train][operation].resources
+                op_now = operation
+            if solver.value(vars[slot+1][train][operation]) == 1:
+                resources_next += trains[train][operation].resources
+                op_next = operation
+        if resources_now == []:
+            nothing = Resource("nothing" + str(train))
+            resources_now = [nothing]
+        for now in resources_now:
+            if resources_next == []:
                 nothing = Resource("nothing" + str(train))
-                resources_now = [nothing]
-            for now in resources_now:
-                if resources_next == []:
-                    nothing = Resource("nothing" + str(train))
-                    resources_next = [nothing]
-                for next in resources_next:
-                    if now != next:
-                        slot_graphes[slot].add_edge(next.name, now.name, x=(
-                            train, op_now, op_next))
-        if len(list(nx.simple_cycles(slot_graphes[slot]))) > 0:
-            raise Exception("Please activate cycle constraints")
-    return slot_graphes
+                resources_next = [nothing]
+            for next in resources_next:
+                if now != next:
+                    graph.add_edge(next.name, now.name, x=(
+                        train, op_now, op_next))
+    if len(list(nx.simple_cycles(graph))) > 0:
+        raise Exception("Please activate cycle constraints")
+    return graph
 
 
 def sort_events(events, time_events, graph):
