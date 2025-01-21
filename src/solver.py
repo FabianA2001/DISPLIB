@@ -11,8 +11,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 3  # int
-        self.MAX_FACTOR: float = 3  # float
+        self.SCALE_FACTOR: int = 1  # int
+        self.MAX_FACTOR: float = 1  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -21,16 +21,25 @@ class Solver:
         #             time  train operation
         #             immer der Index
         self.vars = []
+        self.fixed_vars = []
 
         for time in range(self.timeslots):
-            slot = []
+            slot_fixed = []
             for i, train in enumerate(trains):
-                train_slot = []
+                train_slot_fixed = []
                 for op in range(len(train)):
-                    train_slot.append(self.model.new_bool_var(
-                        f"train{i}:op{op} ({time})"))
-                slot.append(train_slot)
-            self.vars.append(slot)
+                    train_slot_fixed.append(0)
+                slot_fixed.append(train_slot_fixed)
+            self.fixed_vars.append(slot_fixed)
+
+    def set_vars(self, train_idx):
+        for time in range(self.timeslots):
+            train_slot = []
+            for op in range(len(self.trains[train_idx])):
+                train_slot.append(self.model.new_bool_var(
+                    f"train{train_idx}:op{op} ({time})"))
+            self.vars.append(train_slot)
+
 
     def print_time(self, name):
         if self.start_time != 0.0:
@@ -44,7 +53,7 @@ class Solver:
         else:
             return 1
 
-    def setObjective(self):
+    def setObjective(self, trainnr):
         # opdelay = 0
         # for t, timeslot in enumerate(self.vars):
         #     for train, time in zip(self.trains, timeslot):
@@ -60,8 +69,7 @@ class Solver:
         ################################
         opdelay = 0
         for t, timeslot in enumerate(self.vars):
-            for train, time in zip(self.trains, timeslot):
-                for op, var in zip(train, time):
+                for var in timeslot:
                     opdelay += t*self.SCALE_FACTOR*var
         self.model.minimize(opdelay)
 
@@ -111,12 +119,11 @@ class Solver:
                 slot_cycles.append((slot, critical_operations))
         return slot_cycles
 
-    def constraint_always_there(self):
+    def constraint_always_there(self, trainnr):
         # At every timeslot, every train has to be in exactly one operation
-        for train in range(len(self.trains)):
-            for slot in range(0, self.timeslots):
-                self.model.add(sum(self.vars[slot][train][op]
-                               for op, _ in enumerate(self.trains[train])) <= 1)
+        for slot in range(0, self.timeslots):
+            self.model.add(sum(self.vars[slot][op]
+                            for op, _ in enumerate(self.trains[trainnr])) <= 1)
 
         # in 0 slot there can be the start and an other operation
         # messes up the solution
@@ -128,72 +135,67 @@ class Solver:
 
     def constraint_start_at_start(self):
         # The start operation has to be the first operation
-        for train in range(len(self.trains)):
-            self.model.add(self.vars[0][train][0] == 1)
+        self.model.add(self.vars[0][0] == 1)
 
-    def constraint_operation_length(self):
+    def constraint_operation_length(self, train):
         # The train can spend 0 timeslots at an operation or at least as many as the operations minimum length
-        for train in range(len(self.trains)):
-            for op in range(len(self.trains[train])):
-                con1 = sum(self.vars[slot][train][op]
-                           for slot in range(self.timeslots)) == 0
-                con2 = sum(self.vars[slot][train][op] for slot in range(
-                    self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.SCALE_FACTOR)
+        for op in range(len(self.trains[train])):
+            con1 = sum(self.vars[slot][op]
+                        for slot in range(self.timeslots)) == 0
+            con2 = sum(self.vars[slot][op] for slot in range(
+                self.timeslots)) >= math.ceil(self.trains[train][op].minimal_duration/self.SCALE_FACTOR)
 
-                # Define boolean variables
-                condition1 = self.model.NewBoolVar('condition1')
-                condition2 = self.model.NewBoolVar('condition2')
-                # Enforce that exactly one of the conditions must be true
-                self.model.Add(condition1 + condition2 == 1)
-                self.model.add(con1).only_enforce_if(condition1)
-                self.model.add(con2).only_enforce_if(condition2)
+            # Define boolean variables
+            condition1 = self.model.NewBoolVar('condition1')
+            condition2 = self.model.NewBoolVar('condition2')
+            # Enforce that exactly one of the conditions must be true
+            self.model.Add(condition1 + condition2 == 1)
+            self.model.add(con1).only_enforce_if(condition1)
+            self.model.add(con2).only_enforce_if(condition2)
 
-    def constraint_end_at_last_op(self):
+    def constraint_end_at_last_op(self, train):
         # The end has to be the last operation
-        for train in range(len(self.trains)):
-            last_op = len(self.trains[train]) - 1
-            self.model.add(sum(self.vars[slot][train][last_op]
-                           for slot in range(self.timeslots)) >= 1)
+        last_op = len(self.trains[train]) - 1
+        self.model.add(sum(self.vars[slot][last_op]
+                        for slot in range(self.timeslots)) >= 1)
 
-    def constraint_resource_release(self):
+    def constraint_resource_release(self, train_idx):
         # Resources can only be used after their release time.
         resources = self.resources()
         ops_per_resource = {res: [] for res in resources}
 
-        for train_idx, train in enumerate(self.trains):
-            for op_idx, operation in enumerate(train):
-                for resource in operation.resources:
-                    ops_per_resource[resource].append(
-                        (train_idx, op_idx, operation))
+        for op_idx, operation in enumerate(self.trains[train_idx]):
+            for resource in operation.resources:
+                ops_per_resource[resource].append(
+                    (train_idx, op_idx, operation))
 
         for time_id in range(self.timeslots):
             for resource, operations in ops_per_resource.items():
                 for train_idx, op_idx, operation in operations:
                     release_time = resource.release__time
                     if release_time > 0:
-                        is_active = self.vars[time_id][train_idx][op_idx]
+                        is_active = self.vars[time_id][op_idx]
 
-                        for t in range(1, (math.ceil(release_time/self.SCALE_FACTOR) + 1)):
+                        """for t in range(1, (math.ceil(release_time/self.SCALE_FACTOR) + 1)):
                             if time_id + t < self.timeslots:
                                 for other_train_idx, other_op_idx, _ in operations:
                                     if (other_train_idx, other_op_idx) != (train_idx, op_idx):
                                         self.model.Add(
                                             self.vars[time_id + t][other_train_idx][other_op_idx] == 0).OnlyEnforceIf(
-                                            is_active)
+                                            is_active)"""
 
-    def constraint_consecutive(self):
+    def constraint_consecutive(self, train):
         # An operaton has to take place in consecutive timeslots
         # checks for timeslot 1 and up
         for slot in range(1, self.timeslots):
-            for train in range(len(self.trains)):
-                for op in range(len(self.trains[train])):
-                    outcoming_edges = list(self.graphes[train].in_edges(op))
-                    target_nodes = [edge[0] for edge in outcoming_edges]
-                    # stay in op or come from previous node in graphe
-                    summ = sum(self.vars[slot-1][train][i]
-                               for i in target_nodes)
-                    self.model.add(
-                        self.vars[slot-1][train][op] + summ >= self.vars[slot][train][op])
+            for op in range(len(self.trains[train])):
+                outcoming_edges = list(self.graphes[train].in_edges(op))
+                target_nodes = [edge[0] for edge in outcoming_edges]
+                # stay in op or come from previous node in graphe
+                summ = sum(self.vars[slot-1][i]
+                            for i in target_nodes)
+                self.model.add(
+                    self.vars[slot-1][op] + summ >= self.vars[slot][op])
 
         # checks slot 0
         # assumes op 0 is the start operation in every train
@@ -229,25 +231,23 @@ class Solver:
                        self.vars[cycle[0]][cycle[1][t][0]][cycle[1][t][1]] for t in range(len(cycle[1])))
                        < 2*len(cycle[1]))
 
-    def constraint_start_upper_bound(self):
-        for index_train, train in enumerate(self.trains):
-            for index_operation, operatin in enumerate(train):
-                if operatin.upper_bound != -1:
-                    summ = self.vars[0][index_train][index_operation]
-                    for i in range(0, math.ceil(operatin.upper_bound/self.SCALE_FACTOR)):
-                        summ += self.vars[i][index_train][index_operation]
-                    self.model.add(
-                        summ >= 1)
+    def constraint_start_upper_bound(self, index_train):
+        for index_operation, operatin in enumerate(self.trains[index_train]):
+            if operatin.upper_bound != -1:
+                summ = self.vars[0][index_operation]
+                for i in range(0, math.ceil(operatin.upper_bound/self.SCALE_FACTOR)):
+                    summ += self.vars[i][index_train][index_operation]
+                self.model.add(
+                    summ >= 1)
 
-    def constraint_start_lower_bound(self):
-        for index_train, train in enumerate(self.trains):
-            for index_operation, operatin in enumerate(train):
-                if operatin.lower_bound != -1:
-                    summ = 0
-                    for i in range(0, math.ceil(operatin.lower_bound/self.SCALE_FACTOR)):
-                        summ += self.vars[i][index_train][index_operation]
-                    self.model.add(
-                        summ == 0)
+    def constraint_start_lower_bound(self, index_train):
+        for index_operation, operatin in enumerate(self.trains[index_train]):
+            if operatin.lower_bound != -1:
+                summ = 0
+                for i in range(0, math.ceil(operatin.lower_bound/self.SCALE_FACTOR)):
+                    summ += self.vars[i][index_operation]
+                self.model.add(
+                    summ == 0)
 
     def print(self, value=False):
         # value erst True setzen wenn gesolvt wurde
@@ -270,8 +270,33 @@ class Solver:
             max_op.append(len(train)-1)
         return max_op
 
+    def solve_train(self, train):
+        self.set_vars(train)
+
+        self.solver = cp_model.CpSolver()
+        #self.solver.parameters.log_search_progress = True
+        self.setObjective(train)
+        self.constraint_start_at_start()
+        self.constraint_operation_length(train)
+        self.constraint_end_at_last_op(train)
+        self.constraint_consecutive(train)
+        self.constraint_start_upper_bound(train)
+        self.constraint_start_lower_bound(train)
+        self.constraint_always_there(train)
+
+        status = self.solver.solve(self.model)
+        print("Status:", status)
+
+        if status == 3:
+            return False
+
+        for slot in range(self.timeslots):
+            for operation in range(len(self.trains[train])):
+                self.fixed_vars[slot][0][operation] = self.solver.value(self.vars[slot][operation])
+        return True
+
     def solve(self):
-        self.print_time("begin model")
+        """self.print_time("begin model")
         self.solver = cp_model.CpSolver()
         # ohne dieses Zeile ist es nicht Determinstisch
         # self.solver.parameters.num_search_workers = 1
@@ -318,4 +343,7 @@ class Solver:
             cycles = self.find_resource_cycles(self.solver)
         self.print_time("save")
         save_result(self.solver, self.vars, self.trains,
-                    self.resources(), self.SCALE_FACTOR)
+                    self.resources(), self.SCALE_FACTOR)"""
+        if self.solve_train(0) == False:
+            pass
+
