@@ -11,8 +11,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 1  # int
-        self.MAX_FACTOR: float = 3  # float
+        self.SCALE_FACTOR: int = 200  # int
+        self.MAX_FACTOR: float = 20  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -303,20 +303,19 @@ class Solver:
             self.constraint_resource_release()
             self.print_time("end constraints")
 
-            # 3 ist unmöglich, 4 ist optimal
+            # 3 ist unmöglich, 4 ist optimal, 2 ist möglich
             status = self.solver.solve(self.model)
             print("Status:", status)
-            assert (status == 4)
+            assert (status == 4 or status == 2)
             print("Orginal objective_value", self.solver.ObjectiveValue())
 
-            # vorläufig deaktiviert da cycles aktuell keine Probleme darstellen
             cycles = self.find_resource_cycles(self.solver)
             while (len(cycles) > 0):
                 for cycle in cycles:
                     self.constraint_destroy_cycle(cycle)
                 status = self.solver.solve(self.model)
                 print("Status:", status)
-                assert (status == 4)
+                assert (status == 4 or status == 2)
 
                 cycles = self.find_resource_cycles(self.solver)
             self.print_time("save")
