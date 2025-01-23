@@ -75,11 +75,14 @@ def calc_new_objective(trains: list[list[Operation]], timeslots):
             if j > len(train)-pos:
                 break
         if op_list != []:
+            op = Operation()
+            op_list.append(op)
             if old_threshold > timeslots:
                 op_list[len(op_list)-1].threshold = timeslots
-            op_list[len(op_list)-1].coeff = old_coeff
-            op_list[len(op_list)-1].increment = old_increment
-            op_list[len(op_list)-1].succesors = []
+            # op_list[len(op_list)-1].coeff = old_coeff
+            # op_list[len(op_list)-1].increment = old_increment
+            lenth = len(op_list)-1
+            op_list[len(op_list)-1].succesors = [lenth]
 
             train_list.append(op_list)
 
