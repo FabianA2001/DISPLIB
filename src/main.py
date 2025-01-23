@@ -54,4 +54,4 @@ if __name__ == "__main__":
     sol.start_time = start_time
     # sol.print()
     sol.solve()
-    # sol.print(True)
+    sol.print(True)

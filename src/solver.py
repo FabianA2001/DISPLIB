@@ -11,8 +11,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 200  # int
-        self.MAX_FACTOR: float = 20  # float
+        self.SCALE_FACTOR: int = 1  # int
+        self.MAX_FACTOR: float = 3  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -270,14 +270,39 @@ class Solver:
             max_op.append(len(train)-1)
         return max_op
 
+    def bad_cycel(self):
+        res_order = {}
+        for res in self.resources():
+            res_order[res] = []
+            for train_index, train in enumerate(self.trains):
+                for op_index, op in enumerate(train):
+                    if res in op.resources:
+                        res_order[res].append((train_index, op_index))
+
+        for slot in range(1, self.timeslots-1):
+            for res_list in res_order.values():
+                vars = []
+                for a, b in res_list:
+                    condition = self.model.NewBoolVar('condition')
+                    self.model.add(self.vars[slot-1][a]
+                                   [b] == 1).only_enforce_if(condition)
+                    self.model.add(self.vars[slot][a][b]
+                                   == 0).only_enforce_if(condition)
+                    vars.append(condition)
+
+                condition = self.model.NewBoolVar('condition')
+                self.model.add(condition >= sum(vars))
+                self.model.add(sum(self.vars[slot][a][b]
+                               for a, b in res_list) == 0).only_enforce_if(condition)
+
     def solve(self):
         self.print_time("begin model")
         self.solver = cp_model.CpSolver()
         log_file = "cp_sat_log.txt"
         with open(log_file, "w") as log_output:
-            self.solver.parameters.log_search_progress = True  # Enable logging
-            self.solver.log_callback = lambda msg: log_output.write(
-                msg + '\n')  # Redirect logs to the file
+            # self.solver.parameters.log_search_progress = True  # Enable logging
+            # self.solver.log_callback = lambda msg: log_output.write(
+            #     msg + '\n')  # Redirect logs to the file
 
             self.print_time("objective")
             self.setObjective()
@@ -301,6 +326,9 @@ class Solver:
 
             self.print_time("release")
             self.constraint_resource_release()
+
+            self.print_time("bad cycel")
+            self.bad_cycel()
             self.print_time("end constraints")
 
             # 3 ist unmöglich, 4 ist optimal, 2 ist möglich
@@ -309,15 +337,15 @@ class Solver:
             assert (status == 4 or status == 2)
             print("Orginal objective_value", self.solver.ObjectiveValue())
 
-            cycles = self.find_resource_cycles(self.solver)
-            while (len(cycles) > 0):
-                for cycle in cycles:
-                    self.constraint_destroy_cycle(cycle)
-                status = self.solver.solve(self.model)
-                print("Status:", status)
-                assert (status == 4 or status == 2)
+            # cycles = self.find_resource_cycles(self.solver)
+            # while (len(cycles) > 0):
+            #     for cycle in cycles:
+            #         self.constraint_destroy_cycle(cycle)
+            #     status = self.solver.solve(self.model)
+            #     print("Status:", status)
+            #     assert (status == 4 or status == 2)
 
-                cycles = self.find_resource_cycles(self.solver)
+            #     cycles = self.find_resource_cycles(self.solver)
             self.print_time("save")
-            save_result(self.solver, self.vars, self.trains,
-                        self.resources(), self.SCALE_FACTOR)
+            # save_result(self.solver, self.vars, self.trains,
+            #             self.resources(), self.SCALE_FACTOR)
