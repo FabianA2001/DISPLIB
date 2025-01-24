@@ -41,9 +41,6 @@ class Operation:
 # Die erste Zahl in Key gibt den Train an, die Zweite zahl die Operation
 
 
-# TODO lower bound
-
-
 def get_operations(path: str) -> list[list[Operation]]:
     result: list[list[Operation]] = []
     with open(path, "r") as file:
@@ -56,6 +53,9 @@ def get_operations(path: str) -> list[list[Operation]]:
                 key = "start_ub"
                 if key in operation:
                     op.upper_bound = operation[key]
+                key = "start_lb"
+                if key in operation:
+                    op.lower_bound = operation[key]
                 key = "min_duration"
                 if key in operation:
                     op.minimal_duration = operation[key]
