@@ -121,8 +121,14 @@ def save_result(solver, vars, trainss, resources: list, FACTOR):
 
                         events.append(event)
     for time in used_timeslots:
-        graph = timeslot_resource_graphes(
-            solver, vars, time-1, trainss, resources)
+        try:
+            graph = timeslot_resource_graphes(
+                solver, vars, time-1, trainss, resources)
+        except:
+            print("----------------------------")
+            print("cyceln in Solution")
+            print("----------------------------")
+            break
         time_events = [
             event for event in events if event["time"] == (time-1)*FACTOR]
         # print("used_timeslot = ", time)

@@ -283,17 +283,23 @@ class Solver:
             for res_list in res_order.values():
                 vars = []
                 for a, b in res_list:
-                    condition = self.model.NewBoolVar('condition')
+                    condition = (self.model.NewBoolVar('condition'),
+                                 self.model.NewBoolVar('condition'))
                     self.model.add(self.vars[slot-1][a]
-                                   [b] == 1).only_enforce_if(condition)
-                    self.model.add(self.vars[slot][a][b]
-                                   == 0).only_enforce_if(condition)
+                                   [b] >= condition[0])
+                    self.model.add(self.vars[slot-1][a]
+                                   [b] <= condition[0])
+
+                    self.model.add(self.vars[slot][a]
+                                   [b] >= condition[1])
+                    self.model.add(self.vars[slot][a]
+                                   [b] <= condition[1])
+
                     vars.append(condition)
 
-                condition = self.model.NewBoolVar('condition')
-                self.model.add(condition >= sum(vars))
-                self.model.add(sum(self.vars[slot][a][b]
-                               for a, b in res_list) == 0).only_enforce_if(condition)
+                for var in vars:
+                    self.model.add(sum(self.vars[slot][a][b]
+                                       for a, b in res_list) == 0).only_enforce_if(var[0]).only_enforce_if(~var[1])
 
     def solve(self):
         self.print_time("begin model")
@@ -347,5 +353,5 @@ class Solver:
 
             #     cycles = self.find_resource_cycles(self.solver)
             self.print_time("save")
-            # save_result(self.solver, self.vars, self.trains,
-            #             self.resources(), self.SCALE_FACTOR)
+            save_result(self.solver, self.vars, self.trains,
+                        self.resources(), self.SCALE_FACTOR)
