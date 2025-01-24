@@ -52,6 +52,9 @@ if __name__ == "__main__":
 
     sol = solver.Solver(trains, clac_maxtime(trains), graphes)
     sol.start_time = start_time
+
+    split_path = path.split("/")
+
     # sol.print()
-    sol.solve()
+    sol.solve(split_path[-1])
     # sol.print(True)

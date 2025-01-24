@@ -11,7 +11,7 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 300  # int
+        self.SCALE_FACTOR: int = 1  # int
         self.MAX_FACTOR: float = 20  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
@@ -301,14 +301,14 @@ class Solver:
                     self.model.add(sum(self.vars[slot][a][b]
                                        for a, b in res_list) == 0).only_enforce_if(var[0]).only_enforce_if(~var[1])
 
-    def solve(self):
+    def solve(self, name):
         self.print_time("begin model")
         self.solver = cp_model.CpSolver()
         log_file = "cp_sat_log.txt"
         with open(log_file, "w") as log_output:
             self.solver.parameters.log_search_progress = True  # Enable logging
-            self.solver.log_callback = lambda msg: log_output.write(
-                msg + '\n')  # Redirect logs to the file
+            # self.solver.log_callback = lambda msg: log_output.write(
+            #     msg + '\n')  # Redirect logs to the file
 
             self.print_time("objective")
             self.setObjective()
@@ -354,4 +354,4 @@ class Solver:
             #     cycles = self.find_resource_cycles(self.solver)
             self.print_time("save")
             save_result(self.solver, self.vars, self.trains,
-                        self.resources(), self.SCALE_FACTOR)
+                        self.resources(), self.SCALE_FACTOR, name)
