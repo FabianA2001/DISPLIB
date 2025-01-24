@@ -244,7 +244,7 @@ class Solver:
             for index_operation, operatin in enumerate(train):
                 if operatin.lower_bound != -1:
                     summ = 0
-                    for i in range(0, math.ceil(operatin.lower_bound/self.SCALE_FACTOR)):
+                    for i in range(0, math.ceil(operatin.lower_bound/self.SCALE_FACTOR)+1):
                         summ += self.vars[i][index_train][index_operation]
                     self.model.add(
                         summ == 0)
