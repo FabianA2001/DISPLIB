@@ -145,7 +145,7 @@ def save_result(solver, vars, trainss, resources: list, FACTOR, name):
         "events": events
     }
     # JSON-Datei erstellen
-    with open(f"solutions/{name}", 'w') as json_file:
+    with open(f"solutions/solution_{name}", 'w') as json_file:
         json.dump(data, json_file, indent=4)
     with open("solution.json", 'w') as json_file:
         json.dump(data, json_file, indent=4)
