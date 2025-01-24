@@ -306,9 +306,9 @@ class Solver:
         self.solver = cp_model.CpSolver()
         log_file = "cp_sat_log.txt"
         with open(log_file, "w") as log_output:
-            # self.solver.parameters.log_search_progress = True  # Enable logging
-            # self.solver.log_callback = lambda msg: log_output.write(
-            #     msg + '\n')  # Redirect logs to the file
+            self.solver.parameters.log_search_progress = True  # Enable logging
+            self.solver.log_callback = lambda msg: log_output.write(
+                msg + '\n')  # Redirect logs to the file
 
             self.print_time("objective")
             self.setObjective()
