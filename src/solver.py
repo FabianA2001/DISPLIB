@@ -11,7 +11,7 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 1  # int
+        self.SCALE_FACTOR: int = 200  # int
         self.MAX_FACTOR: float = 20  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
@@ -281,25 +281,9 @@ class Solver:
 
         for slot in range(1, self.timeslots-1):
             for res_list in res_order.values():
-                vars = []
                 for a, b in res_list:
-                    condition = (self.model.NewBoolVar('condition'),
-                                 self.model.NewBoolVar('condition'))
-                    self.model.add(self.vars[slot-1][a]
-                                   [b] >= condition[0])
-                    self.model.add(self.vars[slot-1][a]
-                                   [b] <= condition[0])
-
-                    self.model.add(self.vars[slot][a]
-                                   [b] >= condition[1])
-                    self.model.add(self.vars[slot][a]
-                                   [b] <= condition[1])
-
-                    vars.append(condition)
-
-                for var in vars:
                     self.model.add(sum(self.vars[slot][a][b]
-                                       for a, b in res_list) == 0).only_enforce_if(var[0]).only_enforce_if(~var[1])
+                                       for a, b in res_list) == 0).only_enforce_if(self.vars[slot-1][a][b]).only_enforce_if(~self.vars[slot][a][b])
 
     def solve(self, name):
         self.print_time("begin model")
