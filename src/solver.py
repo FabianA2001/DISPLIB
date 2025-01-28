@@ -337,6 +337,21 @@ class Solver:
                             f"op{index_var}: {self.solver.value(var)}\t", end="")
                     print()
 
+    def bad_cycel(self):
+        res_order = {}
+        for res in self.resources():
+            res_order[res] = []
+            for train_index, train in enumerate(self.trains):
+                for op_index, op in enumerate(train):
+                    if res in op.resources:
+                        res_order[res].append((train_index, op_index))
+
+        for slot in range(1, self.timeslots-1):
+            for res_list in res_order.values():
+                for a, b in res_list:
+                    self.model.add(sum(self.vars[slot][a][b]
+                                       for a, b in res_list) == 0).only_enforce_if(self.vars[slot-1][a][b]).only_enforce_if(~self.vars[slot][a][b])
+
     def max_operations(self):
         max_op = []
         for train in self.trains:
@@ -379,6 +394,7 @@ class Solver:
         self.print_time("release")
         self.constraint_resource_release()
         self.print_time("end constraints")
+        self.bad_cycel()
 
         # # compiliert jetzt, tut aber nicht, was es soll, solllte aber richtiger sein als vorher
         # self.constraint_resource_release2()
@@ -390,15 +406,15 @@ class Solver:
         print("Orginal objective_value", self.solver.ObjectiveValue())
 
         # vorläufig deaktiviert da cycles aktuell keine Probleme darstellen
-        cycles = self.find_resource_cycles(self.solver)
-        while (len(cycles) > 0):
-            for cycle in cycles:
-                self.constraint_destroy_cycle(cycle)
-            status = self.solver.solve(self.model)
-            print("Status:", status)
-            assert (status == 4)
+        # cycles = self.find_resource_cycles(self.solver)
+        # while (len(cycles) > 0):
+        #     for cycle in cycles:
+        #         self.constraint_destroy_cycle(cycle)
+        #     status = self.solver.solve(self.model)
+        #     print("Status:", status)
+        #     assert (status == 4)
 
-            cycles = self.find_resource_cycles(self.solver)
-        self.print_time("save")
+        #     cycles = self.find_resource_cycles(self.solver)
+        # self.print_time("save")
         save_result(self.solver, self.vars, self.max_operations(),
                     self.trains, self.resources(), self.FACTOR)

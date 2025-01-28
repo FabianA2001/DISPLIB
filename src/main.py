@@ -143,8 +143,8 @@ if __name__ == "__main__":
                 node_size=300, font_size=9, font_weight='bold')
         plt.savefig(f"graphen/train{i}.png")
 
-    sol = solver.Solver(trains, 1500, graphes, calc_new_objective(
-        trains, 500), clac_maxtime2(important_trains))
+    sol = solver.Solver(trains, 2500, graphes, calc_new_objective(
+        trains, 1000), clac_maxtime2(important_trains))
     sol.start_time = start_time
     # sol.print()
     sol.solve()

@@ -18,6 +18,10 @@ class Resource:
             return NotImplemented
         return (self.name == other.name)
 
+    def __hash__(self):
+        # Combine the hash of significant attributes
+        return hash((self.name, self.release__time))
+
 
 class Operation:
     def __init__(self, min_dur: int = -1, low_bound: int = -1, upper_bound: int = -1, res: list[Resource] = [], successors: list[int] = [], threshold: int = 0, coeff: int = 0, increment: int = 0) -> None:
