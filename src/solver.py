@@ -33,6 +33,7 @@ class Solver:
             self.fixed_vars.append(slot_fixed)
 
     def set_vars(self, train_idx):
+        self.vars = []
         for time in range(self.timeslots):
             train_slot = []
             for op in range(len(self.trains[train_idx])):
@@ -251,7 +252,7 @@ class Solver:
 
     def print(self, value=False):
         # value erst True setzen wenn gesolvt wurde
-        for i, trains in enumerate(self.vars):
+        for i, trains in enumerate(self.fixed_vars):
             print(f"timeslot {i}")
             for y, train in enumerate(trains):
                 print(f"\ttrain {y}:")
@@ -261,7 +262,7 @@ class Solver:
                     print("\t\t", end="")
                     for index_var, var in enumerate(train):
                         print(
-                            f"op{index_var}: {self.solver.value(var)}\t", end="")
+                            f"op{index_var}: {var}\t", end="")
                     print()
 
     def max_operations(self):
@@ -294,6 +295,11 @@ class Solver:
             for operation in range(len(self.trains[train])):
                 self.fixed_vars[slot][0][operation] = self.solver.value(self.vars[slot][operation])
         return True
+
+    def remove_train(self, train):
+        for slot in range(self.timeslots):
+            for op in range(len(self.fixed_vars[slot][train])):
+                self.fixed_vars[slot][train][op] = 0
 
     def solve(self):
         """self.print_time("begin model")
@@ -344,6 +350,26 @@ class Solver:
         self.print_time("save")
         save_result(self.solver, self.vars, self.trains,
                     self.resources(), self.SCALE_FACTOR)"""
-        if self.solve_train(0) == False:
-            pass
+        wait_list = list(range(len(self.trains)))
+        solved = []
+
+        while len(wait_list) > 0:
+            #self.print(True)
+            train = wait_list[0]
+            print("Solving train number: ", train)
+            possible = self.solve_train(train)
+            while possible == False:
+                remove = solved[0]
+                self.remove_train(remove)
+                wait_list.append(remove)
+                possible = self.solve_train(train)
+            wait_list = wait_list[1:]
+            solved.append(train)
+            for slot in range(self.timeslots):
+                for op in range(len(self.fixed_vars[slot][train])):
+                    self.fixed_vars[slot][train][op] = self.solver.value(self.vars[slot][op])
+
+        self.print(True)
+        save_result(self.fixed_vars, self.trains,
+                        self.resources())
 

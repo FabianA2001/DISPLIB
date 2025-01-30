@@ -92,7 +92,7 @@ def big_H(a, b):
         return 1
 
 
-def save_result(solver, vars, trainss, resources: list, FACTOR):
+def save_result(vars, trainss, resources: list):
     events = []
     opdelay = 0
     #resource_graphes = timeslot_resource_graphes(
@@ -101,28 +101,28 @@ def save_result(solver, vars, trainss, resources: list, FACTOR):
     for time_index, timeslot in enumerate(vars):
         for train_index, train in enumerate(timeslot):
             for operation_index, operation in enumerate(train):
-                if solver.Value(operation):
+                if operation == 1:
 
                     op = trainss[train_index][operation_index]
                     if time_index == 0:
-                        opdelay += (op.coeff*max(0, (time_index*FACTOR)-op.threshold) +
-                                    op.increment*big_H(time_index*FACTOR, op.threshold))
-                        event = {"time": time_index*FACTOR, "train": train_index,
+                        opdelay += (op.coeff*max(0, time_index*-op.threshold) +
+                                    op.increment*big_H(time_index, op.threshold))
+                        event = {"time": time_index, "train": train_index,
                                  "operation": operation_index}
                         events.append(event)
 
-                    elif not solver.Value(vars[time_index-1][train_index][operation_index]):
-                        opdelay += (op.coeff*max(0, ((time_index-1)*FACTOR)-op.threshold) +
-                                    op.increment*big_H((time_index-1)*FACTOR, op.threshold))
-                        event = {"time": ((time_index-1)*FACTOR), "train": train_index,
+                    elif not (vars[time_index-1][train_index][operation_index] == 1):
+                        opdelay += (op.coeff*max(0, (time_index-1)-op.threshold) +
+                                    op.increment*big_H((time_index-1), op.threshold))
+                        event = {"time": (time_index-1), "train": train_index,
                                  "operation": operation_index}
                         if time_index != 0 and time_index not in used_timeslots:
                             used_timeslots.append(time_index)
 
                         events.append(event)
     for time in used_timeslots:
-        graph = timeslot_resource_graphes(solver, vars, time-1, trainss, resources)
-        time_events = [event for event in events if event["time"] == (time-1)*FACTOR]
+        graph = timeslot_resource_graphes(vars, time-1, trainss, resources)
+        time_events = [event for event in events if event["time"] == time-1]
         #print("used_timeslot = ", time)
         #print("(time-1) * FACTOR = ", (time-1)*FACTOR)
         #for event in time_events:
@@ -141,7 +141,7 @@ def save_result(solver, vars, trainss, resources: list, FACTOR):
         json.dump(data, json_file, indent=4)
 
 
-def timeslot_resource_graphes(solver, vars, slot, trains, resources: list):
+def timeslot_resource_graphes(vars, slot, trains, resources: list):
     resource_names = []
     for resource in resources:
         resource_names.append(resource.name)
@@ -154,10 +154,10 @@ def timeslot_resource_graphes(solver, vars, slot, trains, resources: list):
         op_now = 0
         op_next = 0
         for operation in range(len(trains[train])):
-            if solver.value(vars[slot][train][operation]) == 1:
+            if vars[slot][train][operation] == 1:
                 resources_now += trains[train][operation].resources
                 op_now = operation
-            if solver.value(vars[slot+1][train][operation]) == 1:
+            if vars[slot+1][train][operation] == 1:
                 resources_next += trains[train][operation].resources
                 op_next = operation
         if resources_now == []:
