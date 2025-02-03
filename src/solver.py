@@ -6,12 +6,31 @@ import time
 import math
 
 
+class SolutionPrinter(cp_model.CpSolverSolutionCallback):
+    def __init__(self, time=0.0):
+        super().__init__()
+        self.solution_count = 0
+        self.start_time = time
+
+    def on_solution_callback(self):
+        self.solution_count += 1
+        # Grüne Markierung für bessere Sichtbarkeit
+        print("\n\033[92m!!! Lösung gefunden !!!\033[0m")
+        self.print_time()
+
+    def print_time(self):
+        if self.start_time != 0.0:
+            elapsed_time = int(time.time() - self.start_time)
+            # Print the elapsed time
+            print(f"nach {int(elapsed_time/60)}m {elapsed_time % 60}s")
+
+
 class Solver:
     def __init__(self, trains, timeslots, graphes) -> None:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 300  # int
+        self.SCALE_FACTOR: int = 3  # int
         self.MAX_FACTOR: float = 20  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
@@ -288,54 +307,52 @@ class Solver:
     def solve(self, name):
         self.print_time("begin model")
         self.solver = cp_model.CpSolver()
-        log_file = "cp_sat_log.txt"
-        with open(log_file, "w") as log_output:
-            self.solver.parameters.log_search_progress = True  # Enable logging
-            # self.solver.log_callback = lambda msg: log_output.write(
-            #     msg + '\n')  # Redirect logs to the file
+        # self.solver.parameters.log_search_progress = True  # Enable logging
 
-            self.print_time("objective")
-            self.setObjective()
-            self.print_time("start")
-            self.constraint_start_at_start()
-            self.print_time("length")
-            self.constraint_operation_length()
-            self.print_time("end")
-            self.constraint_end_at_last_op()
-            self.print_time("consecutive")
-            self.constraint_consecutive()
-            self.print_time("resource")
-            self.constraint_resource()
-            self.print_time("upper")
-            self.constraint_start_upper_bound()
-            self.print_time("lower")
-            self.constraint_start_lower_bound()
+        self.print_time("objective")
+        self.setObjective()
+        self.print_time("start")
+        self.constraint_start_at_start()
+        self.print_time("length")
+        self.constraint_operation_length()
+        self.print_time("end")
+        self.constraint_end_at_last_op()
+        self.print_time("consecutive")
+        self.constraint_consecutive()
+        self.print_time("resource")
+        self.constraint_resource()
+        self.print_time("upper")
+        self.constraint_start_upper_bound()
+        self.print_time("lower")
+        self.constraint_start_lower_bound()
 
-            self.print_time("always there")
-            self.constraint_always_there()
+        self.print_time("always there")
+        self.constraint_always_there()
 
-            self.print_time("release")
-            self.constraint_resource_release()
+        self.print_time("release")
+        self.constraint_resource_release()
 
-            self.print_time("bad cycel")
-            self.bad_cycel()
-            self.print_time("end constraints")
+        self.print_time("bad cycel")
+        self.bad_cycel()
+        self.print_time("end constraints")
 
-            # 3 ist unmöglich, 4 ist optimal, 2 ist möglich
-            status = self.solver.solve(self.model)
-            print("Status:", status)
-            assert (status == 4 or status == 2)
-            print("Orginal objective_value", self.solver.ObjectiveValue())
+        # 3 ist unmöglich, 4 ist optimal, 2 ist möglich
+        status = self.solver.solve(
+            self.model, SolutionPrinter(self.start_time))
+        print("Status:", status)
+        assert (status == 4 or status == 2)
+        print("Orginal objective_value",
+              self.solver.ObjectiveValue())
 
-            # cycles = self.find_resource_cycles(self.solver)
-            # while (len(cycles) > 0):
-            #     for cycle in cycles:
-            #         self.constraint_destroy_cycle(cycle)
-            #     status = self.solver.solve(self.model)
-            #     print("Status:", status)
-            #     assert (status == 4 or status == 2)
+        # cycles = self.find_resource_cycles(self.solver)
+        # while (len(cycles) > 0):
+        #     for cycle in cycles:
+        #         self.constraint_destroy_cycle(cycle)
+        #     status = self.solver.solve(self.model)
+        #     print("Status:", status)
+        #     assert (status == 4 or status == 2)
 
-            #     cycles = self.find_resource_cycles(self.solver)
-            self.print_time("save")
-            save_result(self.solver, self.vars, self.trains,
-                        self.resources(), self.SCALE_FACTOR, name)
+        #     cycles = self.find_resource_cycles(self.solver)
+        self.print_time("save")
+        save_result(self.solver, self.vars, self.trains,
+                    self.resources(), self.SCALE_FACTOR, name)
