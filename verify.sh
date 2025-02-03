@@ -7,7 +7,7 @@
 # INSTANCES=displib_instances_phase1/line1_critical_1.json
 # INSTANCES=displib_instances_phase1/line1_critical_2.json
 # INSTANCES=displib_instances_phase1/line1_critical_3.json
-# INSTANCES=displib_instances_phase1/line1_critical_4.json
+INSTANCES=displib_instances_phase1/line1_critical_4.json
 # INSTANCES=displib_instances_phase1/line1_critical_5.json
 # INSTANCES=displib_instances_phase1/line1_critical_6.json
 # INSTANCES=displib_instances_phase1/line1_critical_7.json
