@@ -10,7 +10,7 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, time=0.0):
         super().__init__()
         self.solution_count = 0
-        self.max_solutions = 3
+        self.max_solutions = 5
         self.start_time = time
 
     def on_solution_callback(self):
