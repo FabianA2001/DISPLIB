@@ -10,7 +10,7 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, time=0.0):
         super().__init__()
         self.solution_count = 0
-        self.max_solutions = 5
+        self.max_solutions = 1
         self.start_time = time
 
     def on_solution_callback(self):
@@ -36,7 +36,7 @@ class Solver:
         self.graphes = graphes
         self.model = cp_model.CpModel()
         self.SCALE_FACTOR: int = 300  # int
-        self.MAX_FACTOR: float = 20  # float
+        self.MAX_FACTOR: float = 18  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0

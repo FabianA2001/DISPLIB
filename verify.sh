@@ -9,10 +9,10 @@
 # INSTANCES=displib_instances_phase1/line1_critical_3.json
 # INSTANCES=displib_instances_phase1/line1_critical_4.json
 # INSTANCES=displib_instances_phase1/line1_critical_5.json
-INSTANCES=displib_instances_phase1/line1_critical_6.json
+# INSTANCES=displib_instances_phase1/line1_critical_6.json
 # INSTANCES=displib_instances_phase1/line1_critical_7.json
 # INSTANCES=displib_instances_phase1/line1_critical_8.json
-# INSTANCES=displib_instances_phase1/line1_critical_9.json
+INSTANCES=displib_instances_phase1/line1_critical_9.json
 # INSTANCES=displib_instances_phase1/line1_full_0.json
 # INSTANCES=displib_instances_phase1/line1_full_1.json
 # INSTANCES=displib_instances_phase1/line1_full_2.json
