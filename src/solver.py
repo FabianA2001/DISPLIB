@@ -10,6 +10,7 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, time=0.0):
         super().__init__()
         self.solution_count = 0
+        self.max_solutions = 3
         self.start_time = time
 
     def on_solution_callback(self):
@@ -17,6 +18,10 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
         # Grüne Markierung für bessere Sichtbarkeit
         print("\n\033[92m!!! Lösung gefunden !!!\033[0m")
         self.print_time()
+
+        if self.solution_count >= self.max_solutions:
+            print("Stopping search after reaching max solutions.")
+            self.StopSearch()  # Stops the solver
 
     def print_time(self):
         if self.start_time != 0.0:
@@ -30,7 +35,7 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 3  # int
+        self.SCALE_FACTOR: int = 300  # int
         self.MAX_FACTOR: float = 20  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
