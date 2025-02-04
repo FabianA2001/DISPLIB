@@ -69,25 +69,25 @@ class Solver:
             return 1
 
     def setObjective(self):
-        # opdelay = 0
-        # for t, timeslot in enumerate(self.vars):
-        #     for train, time in zip(self.trains, timeslot):
-        #         for op, var in zip(train, time):
-        #             opdelay += (op.coeff*max(0, t-op.threshold) +
-        #                         op.increment*self.big_H(t, op.threshold))*var
-        # self.model.minimize(opdelay)
+        opdelay = 0
+        for t, timeslot in enumerate(self.vars):
+            for train, time in zip(self.trains, timeslot):
+                for op, var in zip(train, time):
+                    opdelay += (op.coeff*max(0, t-op.threshold) +
+                                op.increment*self.big_H(t, op.threshold))*var
+        self.model.minimize(opdelay)
 
         # eine int varibale erstellen welche nach allen bool variabeln aus der vorigen op waren
 
         #################################
         # WRONG
         ################################
-        opdelay = 0
-        for t, timeslot in enumerate(self.vars):
-            for train, time in zip(self.trains, timeslot):
-                for op, var in zip(train, time):
-                    opdelay += t*self.SCALE_FACTOR*var
-        self.model.minimize(opdelay)
+        # opdelay = 0
+        # for t, timeslot in enumerate(self.vars):
+        #     for train, time in zip(self.trains, timeslot):
+        #         for op, var in zip(train, time):
+        #             opdelay += t*self.SCALE_FACTOR*var
+        # self.model.minimize(opdelay)
 
     def resources(self):
         resources = []
