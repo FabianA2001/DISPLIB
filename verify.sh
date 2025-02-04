@@ -12,7 +12,7 @@
 # INSTANCES=displib_instances_phase1/line1_critical_6.json
 # INSTANCES=displib_instances_phase1/line1_critical_7.json
 # INSTANCES=displib_instances_phase1/line1_critical_8.json
-INSTANCES=displib_instances_phase1/line1_critical_9.json
+# INSTANCES=displib_instances_phase1/line1_critical_9.json
 # INSTANCES=displib_instances_phase1/line1_full_0.json
 # INSTANCES=displib_instances_phase1/line1_full_1.json
 # INSTANCES=displib_instances_phase1/line1_full_2.json
@@ -33,20 +33,26 @@ INSTANCES=displib_instances_phase1/line1_critical_9.json
 # INSTANCES=displib_instances_phase1/line2_close_7.json
 # INSTANCES=displib_instances_phase1/line2_close_8.json
 # INSTANCES=displib_instances_phase1/line2_headway_0.json
-# INSTANCES=displib_instances_phase1/line2_headway_1.json
+#INSTANCES=displib_instances_phase1/line2_headway_1.json
 # INSTANCES=displib_instances_phase1/line2_headway_2.json
 # INSTANCES=displib_instances_phase1/line2_headway_3.json
 # INSTANCES=displib_instances_phase1/line2_headway_4.json
 # INSTANCES=displib_instances_phase1/line2_headway_5.json
 # INSTANCES=displib_instances_phase1/line2_headway_6.json
 # INSTANCES=displib_instances_phase1/line2_headway_7.json
-# INSTANCES=displib_instances_phase1/line3_1.json
+INSTANCES=displib_instances_phase1/line3_1.json
 # INSTANCES=displib_instances_phase1/line3_2.json
 # INSTANCES=displib_instances_phase1/line3_3.json
 # INSTANCES=displib_instances_phase1/line3_4.json
 # INSTANCES=displib_instances_phase1/line3_5.json
 
 clear
+# echo -------------------------------------------------------------------
+# echo analyze
+# echo -------------------------------------------------------------------
+# python3 src/analyze_instance.py $INSTANCES
+
+
 echo -------------------------------------------------------------------
 echo solver
 echo -------------------------------------------------------------------

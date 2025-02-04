@@ -35,8 +35,8 @@ class Solver:
         self.trains: list[list[Operation]] = trains
         self.graphes = graphes
         self.model = cp_model.CpModel()
-        self.SCALE_FACTOR: int = 300  # int
-        self.MAX_FACTOR: float = 18  # float
+        self.SCALE_FACTOR: int = 20  # int
+        self.MAX_FACTOR: float = 25  # float
         self.timeslots = int((timeslots/self.SCALE_FACTOR)*self.MAX_FACTOR)
         print(f"time slots: {self.timeslots}")
         self.start_time = 0.0
@@ -312,7 +312,7 @@ class Solver:
     def solve(self, name):
         self.print_time("begin model")
         self.solver = cp_model.CpSolver()
-        # self.solver.parameters.log_search_progress = True  # Enable logging
+        self.solver.parameters.log_search_progress = True  # Enable logging
 
         self.print_time("objective")
         self.setObjective()
