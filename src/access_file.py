@@ -80,7 +80,9 @@ def get_operations(path: str) -> list[list[Operation]]:
             ob_index = obj["operation"]
             op: Operation = result[train_index][ob_index]
             op.threshold = obj["threshold"]
-            op.coeff = obj["coeff"]
+            key = "coeff"
+            if key in obj:
+                op.coeff = obj[key]
 
     return result
 
